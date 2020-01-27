@@ -36,7 +36,8 @@ enum ColorWheelColor {
  * The Colors that we are reading on the robot ARE NOT
  * the colors that the field is reading!!!
  * 
- * That Being said, Here's the matchup:
+ * That Being said, Here's the matchup: 
+ * (If we're reading 90 degrees off from the field sensor)
  * What We Read   | What The Field is reading  
  * Blue           |   Red
  * Green          |   Yellow
@@ -84,17 +85,21 @@ public class ColorWheelSubsystem extends SubsystemBase {
     runSpinnerAutonomously = false; 
     // Set that we are auton controlling this motor here
     runSpinnerAutonomously = true; 
-    // Start Spinning motor
-    this.colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-    // Wait Untill Desired Color is found
-    // TODO: Investigate Effeciency of this (idk how well this while loop thing will work)
-    while(getFieldColorFromRobotColor(currentSensorColor) != color && runSpinnerAutonomously) { 
-      this.isSpinnerRunningAutonomously = true;
-    }
-    // While Loop Has exited, either because we finished or because it's been canceled. Stop the motor
-    this.colorWheelMotor.set(ControlMode.PercentOutput, 0);
-    // Set that we aren't running motor autoniomously
-    this.isSpinnerRunningAutonomously = false;
+    // Start a new thread so we don't bog down the main thread
+    new Thread() {
+      public void run() {
+        // Start Spinning motor
+        colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
+        // Wait Untill Desired Color is found
+        while(getFieldColorFromRobotColor(currentSensorColor) != color && runSpinnerAutonomously) { 
+          isSpinnerRunningAutonomously = true;
+        }
+        // While Loop Has exited, either because we finished or because it's been canceled. Stop the motor
+        colorWheelMotor.set(ControlMode.PercentOutput, 0);
+        // Set that we aren't running motor autoniomously
+        isSpinnerRunningAutonomously = false;
+      }
+    }.start();
   }
 
   /**
@@ -129,16 +134,22 @@ public class ColorWheelSubsystem extends SubsystemBase {
     this.runSpinnerAutonomously = false;
     // Set that we're running now
     this.runSpinnerAutonomously = true;
-    // Start Spinning
-    this.colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-    while(currentSensorColor != gameDataColor && runSpinnerAutonomously) {
-      isSpinnerRunningAutonomously = true;
-    }
-    // Stop Spinning
-    this.colorWheelMotor.set(ControlMode.PercentOutput, 0);
-    // Update these
-    this.isSpinnerRunningAutonomously = false;
-    this.runSpinnerAutonomously = false;
+    // Create a new thread so we don't bog down the main thread
+    new Thread() {
+      public void run() {
+        // Start Spinning
+        colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
+        // Wait for Color Sensor to return the right value
+        while(currentSensorColor != gameDataColor && runSpinnerAutonomously) {
+          isSpinnerRunningAutonomously = true;
+        }
+        // Stop Spinning
+        colorWheelMotor.set(ControlMode.PercentOutput, 0);
+        // Update these
+        isSpinnerRunningAutonomously = false;
+        runSpinnerAutonomously = false;
+      }
+    }.start();
   }
 
   /**
@@ -151,30 +162,35 @@ public class ColorWheelSubsystem extends SubsystemBase {
     this.runSpinnerAutonomously = false;
     // Set that we're running now
     this.runSpinnerAutonomously = true;
-    // Start Spinning
-    this.colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-    // Variables be useed in the loop
-    ColorWheelColor lastColor = ColorWheelColor.UNKNOWN;
-    int numberOfTimesSeenStartColor = 0;
-    while(runSpinnerAutonomously) {
-      isSpinnerRunningAutonomously = true;
-      if(lastColor != currentSensorColor) {
-        //New Color Detected
-        if(currentSensorColor == startColor) {
-          // We see the start color, lets add it
-          numberOfTimesSeenStartColor++;
+    // Create a new thread so we don't bog down the main thread
+    new Thread() {
+      public void run() {
+        // Start Spinning
+        colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
+        // Variables be useed in the loop
+        ColorWheelColor lastColor = ColorWheelColor.UNKNOWN;
+        int numberOfTimesSeenStartColor = 0;
+        while(runSpinnerAutonomously) {
+          isSpinnerRunningAutonomously = true;
+          if(lastColor != currentSensorColor) {
+            //New Color Detected
+            if(currentSensorColor == startColor) {
+              // We see the start color, lets add it
+              numberOfTimesSeenStartColor++;
+            }
+            // Update last color with the current color
+            lastColor = currentSensorColor;
+            // If we've seen the start color 5 times, we've rotated it 3 times. We can stop.
+            if(numberOfTimesSeenStartColor == 5) break; 
+          }
         }
-        // Update last color with the current color
-        lastColor = currentSensorColor;
-        // If we've seen the start color 5 times, we've rotated it 3 times. We can stop.
-        if(numberOfTimesSeenStartColor == 5) break; 
+        // Stop Spinning
+        colorWheelMotor.set(ControlMode.PercentOutput, 0);
+        // Update these
+        isSpinnerRunningAutonomously = false;
+        runSpinnerAutonomously = false;
       }
-    }
-    // Stop Spinning
-    this.colorWheelMotor.set(ControlMode.PercentOutput, 0);
-    // Update these
-    this.isSpinnerRunningAutonomously = false;
-    this.runSpinnerAutonomously = false;
+    }.start();
   }
 
   /**
@@ -234,6 +250,20 @@ public class ColorWheelSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("IR", IR);
     SmartDashboard.putNumber("Confidence", match.confidence);
     SmartDashboard.putString("Detected Color", colorString);
+  }
+
+  /**
+   * @return If the spinner is being controled in a loop somewhere
+   */
+  public boolean getIsSpinnerRunningAutononously() {
+    return isSpinnerRunningAutonomously;
+  }
+
+  /**
+   * Stop the spinner, if it's running in a loop somewhere
+   */
+  public void stopSpinner() {
+    this.runSpinnerAutonomously = false;
   }
 
   /**
