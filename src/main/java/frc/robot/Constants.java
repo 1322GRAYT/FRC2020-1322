@@ -29,27 +29,27 @@ public final class Constants {
     public static final int REAR_RIGHT_DRIVE_ROTATE  = 1;
     public static final int FRONT_LEFT_DRIVE_ROTATE  = 2;
     public static final int REAR_LEFT_DRIVE_ROTATE   = 3;
-    // Drive Motors (SPARK MAX)
-    public static final int FRONT_RIGHT_DRIVE_DRIVE = 4;
-    public static final int REAR_RIGHT_DRIVE_DRIVE  = 5;
-    public static final int FRONT_LEFT_DRIVE_DRIVE  = 6;
-    public static final int REAR_LEFT_DRIVE_DRIVE   = 7;
+    // Drive Motors (TALON FX)
+    public static final int FRONT_RIGHT_DRIVE_DRIVE = 0;
+    public static final int REAR_RIGHT_DRIVE_DRIVE  = 1;
+    public static final int FRONT_LEFT_DRIVE_DRIVE  = 2;
+    public static final int REAR_LEFT_DRIVE_DRIVE   = 3;
     // Shooter Motors (SPARK MAX)
-    public static final int SHOOTER_ONE             = 8;
-    public static final int SHOOTER_TWO             = 9;
+    public static final int SHOOTER_ONE             = 4;
+    public static final int SHOOTER_TWO             = 5;
     // Robot Lift (SPARK MAX)
-    public static final int ROBOT_LIFT              = 10;
-    // Shooter Tilt (CAN TALON)
+    public static final int ROBOT_LIFT              = 5;
+    // Shooter Tilt (CAN TALON SRX)
     public static final int SHOOTER_AIM_TILT        = 0;
-    // Shooter PAN (CAN TALON)
+    // Shooter PAN (CAN TALON SRX)
     public static final int SHOOTER_AIM_PAN         = 1;
-    // Shooter Intake (CAN TALON)
+    // Shooter Intake (CAN TALON SRX)
     public static final int SHOOTER_BALL_INTAKE     = 2;
-    // Shooter Intake Lift (CAN TALON)
+    // Shooter Intake Lift (CAN TALON SRX)
     public static final int SHOOTER_INTAKE_LIFT     = 3;
-    // Shooter Advance (CAN TALON)
+    // Shooter Advance (CAN TALON SRX)
     public static final int SHOOTER_BALL_ADVANCE    = 4;
-    // Wheel Spinner (CAN TALON)
+    // Wheel Spinner (CAN TALON SRX)
     public static final int COLOR_WHEEL_SPINNER     = 5;
 
 
