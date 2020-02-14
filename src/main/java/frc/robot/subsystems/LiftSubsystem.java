@@ -30,7 +30,7 @@ public class LiftSubsystem extends SubsystemBase {
   }
   
     /**
-   * Runs the robot
+   * Runs the robot lift 
    * @param speed Speed/Power you want to run at (-1 <- 0 -> 1)
    */
   public void runLift(double speed) {
