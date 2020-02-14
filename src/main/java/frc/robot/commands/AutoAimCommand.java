@@ -8,7 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.ShooterPositionSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class AutoAimCommand extends CommandBase {
@@ -17,9 +17,9 @@ public class AutoAimCommand extends CommandBase {
    */
 
   private VisionSubsystem visonSub;
-  private ShooterPositionSubsystem aimSub;
+  private ShooterSubsystem aimSub;
 
-  public AutoAimCommand(ShooterPositionSubsystem aimSub, VisionSubsystem visionSub) {
+  public AutoAimCommand(ShooterSubsystem aimSub, VisionSubsystem visionSub) {
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(aimSub, visionSub);
     this.visonSub = visionSub;

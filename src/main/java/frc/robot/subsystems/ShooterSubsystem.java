@@ -9,23 +9,29 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class ShooterPositionSubsystem extends SubsystemBase {
+public class ShooterSubsystem extends SubsystemBase {
 
   private TalonSRX pan, tilt;
+  private CANSparkMax shooter;
 
   /**
    * Creates a new ShooterPositionSubsystem.
    */
-  public ShooterPositionSubsystem() {
-    //pan = new TalonSRX(Constants.SHOOTER_AIM_PAN);
-    //tilt = new TalonSRX(Constants.SHOOTER_AIM_TILT);
+  public ShooterSubsystem() {
+    pan = new TalonSRX(Constants.SHOOTER_AIM_PAN);
+    tilt = new TalonSRX(Constants.SHOOTER_AIM_TILT);
     // For Limelight Test Bot
-    pan = new TalonSRX(9);
-    tilt = new TalonSRX(10);
+    // pan = new TalonSRX(9);
+    // tilt = new TalonSRX(10);
+  }
+
+  public void runShooter(double speed) {
+    shooter.set(speed);
   }
 
   public void pan(double speed) {

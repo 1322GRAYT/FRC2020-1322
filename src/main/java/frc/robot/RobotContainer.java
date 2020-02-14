@@ -25,8 +25,9 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ColorWheelSubsystem colorWheelSubsystem = new ColorWheelSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem();
-  private final ShooterPositionSubsystem shooterPositionSubsystem = new ShooterPositionSubsystem();
-
+  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  private final BallSubsystem ballSubsystem = new BallSubsystem();
+  
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
 
@@ -47,7 +48,7 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     Joystick driverStick = new Joystick(0);
-    new JoystickButton(driverStick, 1).whenPressed(new AutoAimCommand(shooterPositionSubsystem, visionSubsystem));
+    new JoystickButton(driverStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));
   }
 
 
