@@ -25,12 +25,12 @@ public final class Constants {
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)
-    public static final int FRONT_RIGHT_DRIVE_ROTATE = 0;
+    public static final int FRONT_RIGHT_DRIVE_ROTATE = 6;
     public static final int REAR_RIGHT_DRIVE_ROTATE  = 1;
     public static final int FRONT_LEFT_DRIVE_ROTATE  = 2;
     public static final int REAR_LEFT_DRIVE_ROTATE   = 3;
     // Drive Motors (TALON FX)
-    public static final int FRONT_RIGHT_DRIVE_DRIVE = 0;
+    public static final int FRONT_RIGHT_DRIVE_DRIVE = 4;
     public static final int REAR_RIGHT_DRIVE_DRIVE  = 1;
     public static final int FRONT_LEFT_DRIVE_DRIVE  = 2;
     public static final int REAR_LEFT_DRIVE_DRIVE   = 3;
@@ -38,19 +38,19 @@ public final class Constants {
     public static final int SHOOTER_ONE             = 4;
     public static final int SHOOTER_TWO             = 5;
     // Robot Lift (SPARK MAX)
-    public static final int ROBOT_LIFT              = 5;
+    public static final int ROBOT_LIFT              = 7;
     // Shooter Tilt (CAN TALON SRX)
-    public static final int SHOOTER_AIM_TILT        = 0;
+    public static final int SHOOTER_AIM_TILT        = 5;
     // Shooter PAN (CAN TALON SRX)
-    public static final int SHOOTER_AIM_PAN         = 1;
+    public static final int SHOOTER_AIM_PAN         = 6;
     // Shooter Intake (CAN TALON SRX)
-    public static final int SHOOTER_BALL_INTAKE     = 2;
+    public static final int SHOOTER_BALL_INTAKE     = 7;
     // Shooter Intake Lift (CAN TALON SRX)
-    public static final int SHOOTER_INTAKE_LIFT     = 3;
+    public static final int SHOOTER_INTAKE_LIFT     = 8;
     // Shooter Advance (CAN TALON SRX)
-    public static final int SHOOTER_BALL_ADVANCE    = 4;
+    public static final int SHOOTER_BALL_ADVANCE    = 9;
     // Wheel Spinner (CAN TALON SRX)
-    public static final int COLOR_WHEEL_SPINNER     = 5;
+    public static final int COLOR_WHEEL_SPINNER     = 10;
 
 
     /* COLOR CALIBRATIONS FOR COLOR WHEEL */
@@ -64,4 +64,9 @@ public final class Constants {
     // Remember, we SHOULD NOT spin the wheel faster than 60 RPM
     // This is a CANTalon Speed, so -1 - 0 - 1
     public static final double COLOR_WHEEL_SPIN_SPEED = .5;
+
+    /* FOR INTAKE RAISE/LOWER COMMAND */
+    public static final double RAISE_INTAKE_TIME_SEC = .5;
+    public static final double LOWER_INTAKE_TIME_SEC = .5;
+    public static final double RAISE_LOWER_INTAKE_SPEED = 1;
 }
