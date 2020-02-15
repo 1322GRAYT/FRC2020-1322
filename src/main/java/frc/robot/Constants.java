@@ -22,6 +22,10 @@ import edu.wpi.first.wpilibj.util.Color;
  * wherever the constants are needed, to reduce verbosity.
  */
 public final class Constants {
+    // Enum for Solenoid control
+    public enum SolenoidPosition {
+        UP, DOWN, OFF
+    }
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)
@@ -51,8 +55,20 @@ public final class Constants {
     public static final int SHOOTER_BALL_ADVANCE    = 9;
     // Wheel Spinner (CAN TALON SRX)
     public static final int COLOR_WHEEL_SPINNER     = 10;
+    
+    /* Digital Inputs */
+    public static final int BALL_SENSE_INPUT = 1;
+    public static final int BALL_SENSE_OUTPUT = 2;    
 
+    /* Air Things */
+    public static final int HANG_BAR_0 = 0;
+    public static final int HANG_BAR_1 = 1;
+    public static final int DRIVE_SHIFT_0 = 2;
+    public static final int DRIVE_SHIFT_1 = 3;
+    public static final int COLOR_WHEEL_0 = 4;
+    public static final int COLOR_WHEEL_1 = 5;
 
+    
     /* COLOR CALIBRATIONS FOR COLOR WHEEL */
     // TODO: Calibrate at each event
     public static final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);

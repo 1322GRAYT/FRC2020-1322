@@ -8,35 +8,25 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.BallSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
-public class BallSuckCommand extends CommandBase {
-  private BallSubsystem ballSubsystem;
-  private double speed = 0;
+public class TestShooterPos extends CommandBase {
+  ShooterSubsystem ss;
+  double speed;
   /**
-   * Creates a new BallSuckCommand.
-   * @param bs BallSubsystem from RobotContainer class
-   * @param speed Speed to run shooter at
+   * Creates a new TestShooterPos.
    */
-  public BallSuckCommand(BallSubsystem bs, double speed) {
-    addRequirements(bs);
-    ballSubsystem = bs;
+  public TestShooterPos(ShooterSubsystem ss, double speed) {
+    addRequirements(ss);
+    this.ss = ss;
     this.speed = speed;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    ballSubsystem.runAdvance(speed);
-    ballSubsystem.runIntake(speed);
+    ss.pan(speed);
   }
-
-  @Override
-  public void end(boolean interrupted) {
-    //ballSubsystem.runAdvance(0);
-    //ballSubsystem.runIntake(0);
-  }
-
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {

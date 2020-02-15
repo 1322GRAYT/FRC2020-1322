@@ -29,6 +29,7 @@ public class ManualShootCommand extends CommandBase {
   public void initialize() {
     new Thread() {
       public void run() {
+        System.out.println("Start thinng");
         Timer timer = new Timer();
         timer.reset();
         timer.start();
@@ -40,22 +41,23 @@ public class ManualShootCommand extends CommandBase {
         //         We're reversing the ball advance to ensure there is no ball
         //         currently in the shooter
         shooterSubsystem.runShooter(1);
-        ballSubsystem.runAdvance(-.5);
-        // Wait .2 Seconds
-        while(timer.get() < .2) {}
-        // 2. Stop ball advance
-        ballSubsystem.runAdvance(0);
-        // Reset Timer
-        timer.reset(); // TODO: Make sure this doesn't stop the timer
-        // Wait .7 Seconds for shooter to finish spinning up
-        while(timer.get() < .7) {}
+        while(timer.get() < 1) {}
         // 3. Run ball advance forward to feed a ball to the shooter
         ballSubsystem.runAdvance(1);
         // Reset Timer
         timer.reset();
-        // 4. Wait a while to stop shooting
-        // TODO: Detect when there are no more balls
-        while(timer.get() < 2)
+        // 4. Wait till balls are empty to stop shooting
+        while(true) {
+          // When we see a ball, reset the timer
+          if(ballSubsystem.getBallSensorOuput()) {
+            timer.reset();
+          }
+          // If we haven't seen a ball for over 1.5 seconds, stop shooting
+          if(timer.get() > 1.5) {
+            break;
+          }
+        }
+        // Stop Motors
         ballSubsystem.runAdvance(0);
         shooterSubsystem.runShooter(0);
       }

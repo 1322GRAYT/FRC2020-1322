@@ -10,6 +10,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -18,7 +19,10 @@ public class BallSubsystem extends SubsystemBase {
 
   public enum IntakeLiftPosition {UP, DOWN};
 
+  private boolean intakeSensorStatus = false, outputSensorStatus = false;
+
   private TalonSRX ballIntakeSuck, ballAdvance, ballIntakeLift;
+  private DigitalInput ballSenseIntake, ballSenseOutput;
   /**
    * Creates a new BallSubsystem.
    */
@@ -26,6 +30,16 @@ public class BallSubsystem extends SubsystemBase {
     ballIntakeSuck = new TalonSRX(Constants.SHOOTER_BALL_INTAKE);
     ballAdvance = new TalonSRX(Constants.SHOOTER_BALL_ADVANCE);
     ballIntakeLift = new TalonSRX(Constants.SHOOTER_INTAKE_LIFT);
+    ballSenseIntake = new DigitalInput(Constants.BALL_SENSE_INPUT);
+    ballSenseOutput = new DigitalInput(Constants.BALL_SENSE_OUTPUT);
+  }
+  
+  public boolean getBallSensorIntake() {
+    return intakeSensorStatus;
+  }
+
+  public boolean getBallSensorOuput() {
+    return outputSensorStatus;
   }
   
     /**
@@ -77,5 +91,7 @@ public class BallSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    this.intakeSensorStatus = ballSenseIntake.get();
+    this.outputSensorStatus = ballSenseOutput.get();
   }
 }

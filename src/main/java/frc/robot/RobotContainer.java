@@ -48,7 +48,19 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     Joystick driverStick = new Joystick(0);
-    new JoystickButton(driverStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));
+    Joystick auxStick = new Joystick(1);
+    new JoystickButton(auxStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));
+    // Ball Suck Command
+    new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));
+    new JoystickButton(auxStick, 5).whenReleased(new BallSuckCommand(ballSubsystem, 0));
+    new JoystickButton(auxStick, 6).whenPressed(new BallSuckCommand(ballSubsystem, 1));
+    new JoystickButton(auxStick, 6).whenReleased(new BallSuckCommand(ballSubsystem, 0));
+    // Manual Shoot
+    new JoystickButton(auxStick, 3).whenPressed(new ManualShootCommand(ballSubsystem, shooterSubsystem));
+    new JoystickButton(auxStick, 4).whenPressed(new TestShooterPos(shooterSubsystem, 1));
+    new JoystickButton(auxStick, 4).whenReleased(new TestShooterPos(shooterSubsystem, 0));
+    new JoystickButton(auxStick, 2).whenPressed(new TestShooterPos(shooterSubsystem, -1));
+    new JoystickButton(auxStick, 2).whenReleased(new TestShooterPos(shooterSubsystem, 0));
   }
 
 

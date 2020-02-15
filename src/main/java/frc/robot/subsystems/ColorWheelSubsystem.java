@@ -14,8 +14,10 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -55,6 +57,9 @@ public class ColorWheelSubsystem extends SubsystemBase {
   // New CANTalon Motor
   private WPI_TalonSRX colorWheelMotor;
 
+  // Air Things
+  private DoubleSolenoid wheelExtension;
+
   // Boolean to enable/disable loops that control the spinner motor
   private boolean runSpinnerAutonomously = false;
 
@@ -78,6 +83,8 @@ public class ColorWheelSubsystem extends SubsystemBase {
     m_colorMatcher.addColorMatch(Constants.kGreenTarget);
     m_colorMatcher.addColorMatch(Constants.kRedTarget);
     m_colorMatcher.addColorMatch(Constants.kYellowTarget);  
+    // Init Solenoid
+    wheelExtension = new DoubleSolenoid(Constants.COLOR_WHEEL_0, Constants.COLOR_WHEEL_1);
   }
 
   public void moveToColor(ColorWheelColor color) {
@@ -137,6 +144,8 @@ public class ColorWheelSubsystem extends SubsystemBase {
     // Create a new thread so we don't bog down the main thread
     new Thread() {
       public void run() {
+        // Extend Color Wheel Wheel Spinner that spins the wheel
+        setWheelExtension(Constants.SolenoidPosition.UP);
         // Start Spinning
         colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
         // Wait for Color Sensor to return the right value
@@ -148,6 +157,8 @@ public class ColorWheelSubsystem extends SubsystemBase {
         // Update these
         isSpinnerRunningAutonomously = false;
         runSpinnerAutonomously = false;
+        // Retract Color Wheel Spinner that spins the wheel
+        setWheelExtension(Constants.SolenoidPosition.DOWN);
       }
     }.start();
   }
@@ -294,6 +305,20 @@ public class ColorWheelSubsystem extends SubsystemBase {
       }
     }
     this.haveGameData = (this.gameDataColor != ColorWheelColor.UNKNOWN);
+  }
+
+  /**
+   * Hi mom
+   * @param pos Position that you want the color wheel thingy to be at
+   */
+  public void setWheelExtension(Constants.SolenoidPosition pos) {
+    if(pos.equals(Constants.SolenoidPosition.UP)) {
+      wheelExtension.set(Value.kForward);
+    } else if (pos.equals(Constants.SolenoidPosition.DOWN)) {
+      wheelExtension.set(Value.kReverse);
+    } else {
+      wheelExtension.set(Value.kOff);
+    }
   }
 
   @Override
