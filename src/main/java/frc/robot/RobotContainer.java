@@ -10,9 +10,11 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.Constants.ColorWheelCommandExecute;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
@@ -25,8 +27,12 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ColorWheelSubsystem colorWheelSubsystem = new ColorWheelSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem();
-  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  private final TurretSubsystem shooterSubsystem = new TurretSubsystem();
   private final BallSubsystem ballSubsystem = new BallSubsystem();
+  private final LiftSubsystem liftSubsystem = new LiftSubsystem();
+  
+  private XboxController driverStick;
+  private XboxController auxStick;
   
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -40,6 +46,10 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
+  private void setDefaultCommands() {
+    CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
+  }
+
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -47,20 +57,20 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    Joystick driverStick = new Joystick(0);
-    Joystick auxStick = new Joystick(1);
+    driverStick = new XboxController(0);
+    auxStick = new XboxController(1);
+    // Primitive Autoaim Command
     new JoystickButton(auxStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));
-    // Ball Suck Command
+    // Ball Suck Command (Bumpers)
     new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));
     new JoystickButton(auxStick, 5).whenReleased(new BallSuckCommand(ballSubsystem, 0));
     new JoystickButton(auxStick, 6).whenPressed(new BallSuckCommand(ballSubsystem, 1));
     new JoystickButton(auxStick, 6).whenReleased(new BallSuckCommand(ballSubsystem, 0));
     // Manual Shoot
     new JoystickButton(auxStick, 3).whenPressed(new ManualShootCommand(ballSubsystem, shooterSubsystem));
-    new JoystickButton(auxStick, 4).whenPressed(new TestShooterPos(shooterSubsystem, 1));
-    new JoystickButton(auxStick, 4).whenReleased(new TestShooterPos(shooterSubsystem, 0));
-    new JoystickButton(auxStick, 2).whenPressed(new TestShooterPos(shooterSubsystem, -1));
-    new JoystickButton(auxStick, 2).whenReleased(new TestShooterPos(shooterSubsystem, 0));
+    // Color Wheel Commands (Start for Gain Pos Control, Select for Gain Rot Control)
+    new JoystickButton(auxStick, 7).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_POS_CONTROL));
+    new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_ROT_CONTROL));
   }
 
 

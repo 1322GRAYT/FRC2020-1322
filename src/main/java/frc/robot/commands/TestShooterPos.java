@@ -7,16 +7,16 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.ShooterSubsystem;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.subsystems.TurretSubsystem;
 
-public class TestShooterPos extends CommandBase {
-  ShooterSubsystem ss;
+public class TestShooterPos extends InstantCommand {
+  TurretSubsystem ss;
   double speed;
   /**
    * Creates a new TestShooterPos.
    */
-  public TestShooterPos(ShooterSubsystem ss, double speed) {
+  public TestShooterPos(TurretSubsystem ss, double speed) {
     addRequirements(ss);
     this.ss = ss;
     this.speed = speed;
@@ -26,10 +26,5 @@ public class TestShooterPos extends CommandBase {
   @Override
   public void initialize() {
     ss.pan(speed);
-  }
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return true;
   }
 }

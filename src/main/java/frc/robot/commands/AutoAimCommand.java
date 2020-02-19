@@ -7,19 +7,19 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.ShooterSubsystem;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
-public class AutoAimCommand extends CommandBase {
+public class AutoAimCommand extends InstantCommand {
   /**
    * Creates a new AutoAimCommand.
    */
 
   private VisionSubsystem visonSub;
-  private ShooterSubsystem aimSub;
+  private TurretSubsystem aimSub;
 
-  public AutoAimCommand(ShooterSubsystem aimSub, VisionSubsystem visionSub) {
+  public AutoAimCommand(TurretSubsystem aimSub, VisionSubsystem visionSub) {
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(aimSub, visionSub);
     this.visonSub = visionSub;
@@ -34,7 +34,6 @@ public class AutoAimCommand extends CommandBase {
       private double goodEnoughX = .2; // If the offset is +/- this value, then we'll stop moving. Greater number = less accuracy;
       private double goodEnoughY = .2; // If the offset is +/- this value, then we'll stop moving. Greater number = less accuracy;
       public void run() {
-        System.out.println("Running 1322AutoAim Beta 0.0.1");
         while(true) {
           /* 
           TODO: Use a PID Loop Here. I am dumb and don't know how to do it properly yet
@@ -77,25 +76,7 @@ public class AutoAimCommand extends CommandBase {
   
           // TODO: Add Check for a Manual Override: If So, Cancel Loop
         }
-        System.out.println("Finished 1322AutoAim Beta 0.0.1");
       }
     }.start();
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-
-  }
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return true;
   }
 }

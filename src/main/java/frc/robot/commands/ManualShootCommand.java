@@ -8,17 +8,17 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.BallSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 
-public class ManualShootCommand extends CommandBase {
+public class ManualShootCommand extends InstantCommand {
   BallSubsystem ballSubsystem;
-  ShooterSubsystem shooterSubsystem;
+  TurretSubsystem shooterSubsystem;
   /**
    * Creates a new ManualShootCommand.
    */
-  public ManualShootCommand(BallSubsystem bs, ShooterSubsystem ss) {
+  public ManualShootCommand(BallSubsystem bs, TurretSubsystem ss) {
     addRequirements(bs, ss);
     ballSubsystem = bs;
     shooterSubsystem = ss;
@@ -62,11 +62,5 @@ public class ManualShootCommand extends CommandBase {
         shooterSubsystem.runShooter(0);
       }
     }.run();
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return true;
   }
 }

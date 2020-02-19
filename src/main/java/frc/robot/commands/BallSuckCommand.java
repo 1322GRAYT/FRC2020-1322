@@ -7,10 +7,10 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.BallSubsystem;
 
-public class BallSuckCommand extends CommandBase {
+public class BallSuckCommand extends InstantCommand {
   private BallSubsystem ballSubsystem;
   private double speed = 0;
   /**
@@ -29,17 +29,5 @@ public class BallSuckCommand extends CommandBase {
   public void initialize() {
     ballSubsystem.runAdvance(speed);
     ballSubsystem.runIntake(speed);
-  }
-
-  @Override
-  public void end(boolean interrupted) {
-    //ballSubsystem.runAdvance(0);
-    //ballSubsystem.runIntake(0);
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return true;
   }
 }

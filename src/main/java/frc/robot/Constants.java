@@ -26,6 +26,10 @@ public final class Constants {
     public enum SolenoidPosition {
         UP, DOWN, OFF
     }
+    // Enum for Color Wheel Command
+    public enum ColorWheelCommandExecute {
+        GAIN_POS_CONTROL, GAIN_ROT_CONTROL
+    }
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)

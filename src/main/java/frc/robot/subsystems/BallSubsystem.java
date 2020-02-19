@@ -19,7 +19,7 @@ public class BallSubsystem extends SubsystemBase {
 
   public enum IntakeLiftPosition {UP, DOWN};
 
-  private boolean intakeSensorStatus = false, outputSensorStatus = false;
+  private boolean intakeSensorStatus = false, outputSensorStatus = false, runAdvanceAutonomously = false;
 
   private TalonSRX ballIntakeSuck, ballAdvance, ballIntakeLift;
   private DigitalInput ballSenseIntake, ballSenseOutput;
@@ -54,6 +54,7 @@ public class BallSubsystem extends SubsystemBase {
      * @param speed Speed/Power you want to run at (-1 <- 0 -> 1)
      */
     public void runAdvance(double speed) {
+      runAdvanceAutonomously = false;
       ballAdvance.set(ControlMode.PercentOutput, speed);
     }
     /**
@@ -93,5 +94,19 @@ public class BallSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     this.intakeSensorStatus = ballSenseIntake.get();
     this.outputSensorStatus = ballSenseOutput.get();
+
+    // This is actually better than a trigger because this will run UNTILL the ball is at the output sensor
+    // If We have a ball at the intake, and none at the output, lets run the advance to move it
+    if(this.intakeSensorStatus && !this.outputSensorStatus) {
+      new Thread() {
+        public void run() {
+          runAdvance(.35);
+          runAdvanceAutonomously = true;
+          // Wait Untill ball sensor output returns true
+          while(!getBallSensorOuput() && runAdvanceAutonomously) {}
+          runAdvance(0);
+        }
+      }.run();
+    }
   }
 }
