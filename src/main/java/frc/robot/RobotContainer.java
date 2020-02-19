@@ -30,6 +30,7 @@ public class RobotContainer {
   private final TurretSubsystem shooterSubsystem = new TurretSubsystem();
   private final BallSubsystem ballSubsystem = new BallSubsystem();
   private final LiftSubsystem liftSubsystem = new LiftSubsystem();
+  private final DriveSubsystem driveSubsystem = new DriveSubsystem();
   
   private XboxController driverStick;
   private XboxController auxStick;
@@ -44,10 +45,15 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
+    // Configure Default Commands
+    setDefaultCommands();
   }
 
   private void setDefaultCommands() {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
+    CommandScheduler.getInstance().setDefaultCommand(shooterSubsystem, new ManualTurret(shooterSubsystem, auxStick));
+    CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
+    CommandScheduler.getInstance().setDefaultCommand(driveSubsystem, new BreakInDrive(driveSubsystem, driverStick));
   }
 
   /**

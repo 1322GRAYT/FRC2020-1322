@@ -19,6 +19,8 @@ public class BallSubsystem extends SubsystemBase {
 
   public enum IntakeLiftPosition {UP, DOWN};
 
+  private IntakeLiftPosition currentPos = IntakeLiftPosition.DOWN;
+
   private boolean intakeSensorStatus = false, outputSensorStatus = false, runAdvanceAutonomously = false;
 
   private TalonSRX ballIntakeSuck, ballAdvance, ballIntakeLift;
@@ -41,6 +43,13 @@ public class BallSubsystem extends SubsystemBase {
   public boolean getBallSensorOuput() {
     return outputSensorStatus;
   }
+
+  public IntakeLiftPosition getCurrentIntakePosition() {
+    return currentPos;
+  }
+  public void setCurrentIntakePosition(IntakeLiftPosition pos) {
+    this.currentPos = pos;
+  }
   
     /**
      * Runs the ball intake
@@ -54,7 +63,6 @@ public class BallSubsystem extends SubsystemBase {
      * @param speed Speed/Power you want to run at (-1 <- 0 -> 1)
      */
     public void runAdvance(double speed) {
-      runAdvanceAutonomously = false;
       ballAdvance.set(ControlMode.PercentOutput, speed);
     }
     /**
@@ -66,15 +74,22 @@ public class BallSubsystem extends SubsystemBase {
     public void raiseLowerIntake(IntakeLiftPosition pos) {
       new Thread() {
         public void run() {
-          Timer liftTimer = new Timer();
-          liftTimer.reset();
-          liftTimer.start();
-          runLift(((pos == IntakeLiftPosition.UP) ? 1 : -1) * Constants.RAISE_LOWER_INTAKE_SPEED);
-          while(liftTimer.get() < Constants.LOWER_INTAKE_TIME_SEC) {
-            // Do Nothing
+          if(pos != currentPos) {
+            Timer liftTimer = new Timer();
+            liftTimer.reset();
+            liftTimer.start();
+            if(pos == IntakeLiftPosition.UP) {
+              runLift(Constants.RAISE_INTAKE_SPEED);
+            } else if(pos == IntakeLiftPosition.DOWN){
+              runLift(Constants.LOWER_INTAKE_SPEED);
+            }
+            while(liftTimer.get() < Constants.LOWER_INTAKE_TIME_SEC) {
+              // Do Nothing
+            }
+            runLift(0);
+            setCurrentIntakePosition(pos);
+            liftTimer.stop();
           }
-          runLift(0);
-          liftTimer.stop();
         }
       }.run();
     }
@@ -85,7 +100,7 @@ public class BallSubsystem extends SubsystemBase {
      * called Raise/Lower Lift
      * @param speed Speed/Power you want to run at (-1 <- 0 -> 1)
      */
-    private void runLift(double speed) {
+    public void runLift(double speed) {
        ballIntakeLift.set(ControlMode.PercentOutput, speed);
     }
   
@@ -94,19 +109,16 @@ public class BallSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     this.intakeSensorStatus = ballSenseIntake.get();
     this.outputSensorStatus = ballSenseOutput.get();
+    //System.out.println("Intake Sensor: " + intakeSensorStatus + " Output Sensor: " + outputSensorStatus);
 
-    // This is actually better than a trigger because this will run UNTILL the ball is at the output sensor
     // If We have a ball at the intake, and none at the output, lets run the advance to move it
-    if(this.intakeSensorStatus && !this.outputSensorStatus) {
-      new Thread() {
-        public void run() {
-          runAdvance(.35);
-          runAdvanceAutonomously = true;
-          // Wait Untill ball sensor output returns true
-          while(!getBallSensorOuput() && runAdvanceAutonomously) {}
-          runAdvance(0);
-        }
-      }.run();
+    if(this.intakeSensorStatus && !this.outputSensorStatus){
+      runAdvance(.6);
+      runAdvanceAutonomously = true;
+    } 
+    if(!this.intakeSensorStatus && runAdvanceAutonomously) {
+      runAdvance(0);
+      runAdvanceAutonomously = false;
     }
   }
 }

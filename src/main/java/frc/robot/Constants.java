@@ -88,5 +88,6 @@ public final class Constants {
     /* FOR INTAKE RAISE/LOWER COMMAND */
     public static final double RAISE_INTAKE_TIME_SEC = .5;
     public static final double LOWER_INTAKE_TIME_SEC = .5;
-    public static final double RAISE_LOWER_INTAKE_SPEED = 1;
+    public static final double LOWER_INTAKE_SPEED = .5;
+    public static final double RAISE_INTAKE_SPEED = 1;
 }

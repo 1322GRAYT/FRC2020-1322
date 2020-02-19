@@ -8,23 +8,24 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Constants;
-import frc.robot.subsystems.LiftSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 
-public class ManualLift extends CommandBase {
-  private LiftSubsystem liftSubsystem;
+public class ManualTurret extends CommandBase {
+  private TurretSubsystem ballTurret;
   private XboxController auxStick;
 
   /**
-   * Creates a new ManualLift.
+   * Creates a new TurretManualControl.
    */
-  public ManualLift(LiftSubsystem liftSubsystem, XboxController auxStick) {
+  public ManualTurret(TurretSubsystem ballTurret, XboxController auxStick) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.liftSubsystem = liftSubsystem;
-    addRequirements(this.liftSubsystem);
 
     this.auxStick = auxStick;
+    this.ballTurret = ballTurret;
+    addRequirements(this.ballTurret);
   }
 
   // Called when the command is initially scheduled.
@@ -35,16 +36,9 @@ public class ManualLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double liftPower = (auxStick.getRawButton(1)?1:0) - (auxStick.getRawButton(2)?1:0);
-    liftSubsystem.runLift(liftPower);
-
-    int dPadPos = auxStick.getPOV();
-    if ((dPadPos > 350 || dPadPos < 10) && dPadPos != -1){ // D-Pad Up
-      liftSubsystem.runLiftArm(Constants.SolenoidPosition.UP);
-    } else if (auxStick.getPOV() > 170 && auxStick.getPOV() < 200){ // D-Pad Down
-      liftSubsystem.runLiftArm(Constants.SolenoidPosition.DOWN);
-    }
-
+    ballTurret.manualControl(-this.auxStick.getX(Hand.kLeft), this.auxStick.getY(Hand.kLeft));
+    SmartDashboard.putNumber("PanAngle", ballTurret.panEncoder());
+    SmartDashboard.putNumber("TiltAngle", ballTurret.tiltEncoder());
   }
 
   // Called once the command ends or is interrupted.

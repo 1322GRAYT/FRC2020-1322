@@ -8,23 +8,20 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Constants;
-import frc.robot.subsystems.LiftSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
 
-public class ManualLift extends CommandBase {
-  private LiftSubsystem liftSubsystem;
+public class BreakInDrive extends CommandBase {
+  private DriveSubsystem ds;
   private XboxController auxStick;
-
   /**
-   * Creates a new ManualLift.
+   * Creates a new BreakInDrive.
    */
-  public ManualLift(LiftSubsystem liftSubsystem, XboxController auxStick) {
-    // Use addRequirements() here to declare subsystem dependencies.
-    this.liftSubsystem = liftSubsystem;
-    addRequirements(this.liftSubsystem);
-
+  public BreakInDrive(DriveSubsystem ds, XboxController auxStick) {
+    this.ds = ds;
     this.auxStick = auxStick;
+    addRequirements(this.ds);
   }
 
   // Called when the command is initially scheduled.
@@ -35,16 +32,7 @@ public class ManualLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double liftPower = (auxStick.getRawButton(1)?1:0) - (auxStick.getRawButton(2)?1:0);
-    liftSubsystem.runLift(liftPower);
-
-    int dPadPos = auxStick.getPOV();
-    if ((dPadPos > 350 || dPadPos < 10) && dPadPos != -1){ // D-Pad Up
-      liftSubsystem.runLiftArm(Constants.SolenoidPosition.UP);
-    } else if (auxStick.getPOV() > 170 && auxStick.getPOV() < 200){ // D-Pad Down
-      liftSubsystem.runLiftArm(Constants.SolenoidPosition.DOWN);
-    }
-
+    ds.breakInDrive(auxStick.getY(Hand.kLeft), auxStick.getY(Hand.kRight));
   }
 
   // Called once the command ends or is interrupted.
