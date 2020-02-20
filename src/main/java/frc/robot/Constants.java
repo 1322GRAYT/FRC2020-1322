@@ -30,6 +30,10 @@ public final class Constants {
     public enum ColorWheelCommandExecute {
         GAIN_POS_CONTROL, GAIN_ROT_CONTROL
     }
+    // Enum for Drive Shifter
+    public enum DriveShiftPos {
+        HIGH_GEAR, LOW_GEAR
+    }
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)

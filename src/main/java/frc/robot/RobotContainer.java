@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants.ColorWheelCommandExecute;
+import frc.robot.Constants.DriveShiftPos;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -64,6 +65,10 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     driverStick = new XboxController(0);
+    // Shifter Command (Y for high gear, X for low gear)
+    new JoystickButton(driverStick, 4).whenPressed(new ShiftCommand(driveSubsystem, DriveShiftPos.HIGH_GEAR));
+    new JoystickButton(driverStick, 1).whenPressed(new ShiftCommand(driveSubsystem, DriveShiftPos.LOW_GEAR));
+
     auxStick = new XboxController(1);
     // Primitive Autoaim Command
     new JoystickButton(auxStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));

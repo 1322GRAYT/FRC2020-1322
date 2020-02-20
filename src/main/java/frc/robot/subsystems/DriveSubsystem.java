@@ -10,14 +10,19 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.DriveShiftPos;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class DriveSubsystem extends SubsystemBase {
   TalonFX leftDriveRear, leftDriveFront, rightDriveRear, rightDriveFront;
   CANSparkMax leftRotRear, leftRotFront, rightRotRear, rightRotFront;
+  DoubleSolenoid shifterSolenoid;
 
   public DriveSubsystem() {
     leftDriveFront = new TalonFX(Constants.FRONT_LEFT_DRIVE_DRIVE);
@@ -33,6 +38,8 @@ public class DriveSubsystem extends SubsystemBase {
     leftRotFront = new CANSparkMax(Constants.FRONT_LEFT_DRIVE_ROTATE, MotorType.kBrushless);
     rightRotRear = new CANSparkMax(Constants.REAR_RIGHT_DRIVE_ROTATE, MotorType.kBrushless);
     rightRotFront = new CANSparkMax(Constants.FRONT_RIGHT_DRIVE_ROTATE, MotorType.kBrushless);
+
+    shifterSolenoid = new DoubleSolenoid(Constants.DRIVE_SHIFT_0, Constants.DRIVE_SHIFT_1);
   }
 
   public void breakInDrive(double rotPower, double fwdPower) {
@@ -43,6 +50,14 @@ public class DriveSubsystem extends SubsystemBase {
     leftRotFront.set(rotPower);
     rightRotRear.set(rotPower);
     rightRotFront.set(rotPower);
+  }
+
+  public void shiftShifter(Constants.DriveShiftPos pos) {
+    if(pos == DriveShiftPos.HIGH_GEAR) {
+      this.shifterSolenoid.set(Value.kForward);
+    } else {
+      this.shifterSolenoid.set(Value.kReverse);
+    }
   }
 
   @Override
