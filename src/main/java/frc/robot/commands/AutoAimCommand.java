@@ -8,7 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.AimSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class AutoAimCommand extends InstantCommand {
@@ -17,9 +17,9 @@ public class AutoAimCommand extends InstantCommand {
    */
 
   private VisionSubsystem visonSub;
-  private TurretSubsystem aimSub;
+  private AimSubsystem aimSub;
 
-  public AutoAimCommand(TurretSubsystem aimSub, VisionSubsystem visionSub) {
+  public AutoAimCommand(AimSubsystem aimSub, VisionSubsystem visionSub) {
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(aimSub, visionSub);
     this.visonSub = visionSub;
