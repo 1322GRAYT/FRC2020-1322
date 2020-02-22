@@ -5,6 +5,9 @@ import frc.robot.SwrvMap;
 import frc.robot.calibrations.K_SWRV;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.ctre.phoenix.motorcontrol.*;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -16,22 +19,11 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	private static final double VeSDRV_r_ChassisTrkRat = Math.sqrt(Math.pow(K_SWRV.KeSWRV_l_ChassisWhlBase, 2) + Math.pow(K_SWRV.KeSWRV_l_ChassisTrkWdth, 2));
 
 	private SwerveDriveModule[] SwrvDrvMod = new SwerveDriveModule[] {                            
-		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless), new CANSparkMax(Constants.SWRV_FR_RT_DRV, MotorType.kBrushless), 0), //real:298 practice: 56
-		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless), new CANSparkMax(Constants.SWRV_FR_LT_DRV, MotorType.kBrushless), 0), //real:355 practice: 190
-		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless), new CANSparkMax(Constants.SWRV_RR_LT_DRV, MotorType.kBrushless), 0), //real:293 practice: 59
-		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless), new CANSparkMax(Constants.SWRV_RR_RT_DRV, MotorType.kBrushless), 0)  //real:390 practice: 212
+		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_RT_DRV), 0), //real:298 practice: 56
+		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_LT_DRV), 0), //real:355 practice: 190
+		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_LT_DRV), 0), //real:293 practice: 59
+		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_RT_DRV), 0)  //real:390 practice: 212
 	};
-
-
-    drvFrontLeft = new TalonFX(Constants.SWRV_FR_LT_DRV);
-    drvRearLeft = new TalonFX(Constants.SWRV_RR_LT_DRV);
-    drvRearLeft.follow(drvFrontLeft);
-
-    drvFrontRight = new TalonFX(Constants.SWRV_FR_RT_DRV);
-    drvRearRight = new TalonFX(Constants.SWRV_RR_RT_DRV);
-    drvRearRight.follow(drvFrontRight);
-
-
 
 	private AHRS mNavX = new AHRS(SPI.Port.kMXP, (byte) 200);
 
@@ -62,7 +54,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		SwrvDrvMod[0].resetDrvZeroPstn();
 
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-			SwrvDrvMod[i].getDrvMtr().setIdleMode(IdleMode.kBrake);
+			SwrvDrvMod[i].getDrvMtr().setNeutralMode(NeutralMode.Brake);
 		}
 		
 	}

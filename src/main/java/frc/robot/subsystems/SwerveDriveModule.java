@@ -32,7 +32,6 @@ public class SwerveDriveModule extends SubsystemBase {
     private final CANEncoder Ms_h_RotEncdr;
 
     private final TalonFX Ms_h_DrvMtr;
-    private final CANEncoder Ms_h_DrvEncdr;
 
     private final double Me_Deg_RotEncdrZeroOfst;
     private double Me_t_RotMtrStlInitTm;
@@ -41,9 +40,6 @@ public class SwerveDriveModule extends SubsystemBase {
     private TeMtrDirctn Me_e_DrvMtrDirctn;
     private boolean Me_b_DrvMtrDirctnLtch;
     private boolean Me_b_DrvMtrDirctnUpdTrig;
-
-
-
 
 
 	SwerveDriveModule(int Le_i_ModIdx, CANSparkMax Ls_h_RotMtr, TalonFX Ls_h_DrvMtr, double Le_Deg_RotZeroOfst) {
@@ -56,13 +52,11 @@ public class SwerveDriveModule extends SubsystemBase {
         Me_t_RotMtrStlInitTm = 0;
 
         Ms_h_DrvMtr = Ls_h_DrvMtr;
-//      Ms_h_DrvEncdr = Ms_h_DrvMtr.
         
-        Me_r_DrvEncdrZeroPstn = Ms_h_DrvEncdr.getPosition();
+        Me_r_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
         Me_e_DrvMtrDirctn = TeMtrDirctn.Fwd;
         Me_b_DrvMtrDirctnLtch = false;
         Me_b_DrvMtrDirctnUpdTrig = false;
-
 
 
         /*****************************************************************/
@@ -97,6 +91,8 @@ public class SwerveDriveModule extends SubsystemBase {
         /* Drive Control PID Controller Configurations                   */
         /*****************************************************************/
         Ls_h_DrvMtr.configFactoryDefault();
+        Ls_h_DrvMtr.setInverted(false);
+        Ls_h_DrvMtr.setSensorPhase(false);
 
 		// set PID coefficients
 		Ls_h_DrvMtr.config_kP(0, K_SWRV.KeSWRV_K_DrvProp);
@@ -106,23 +102,18 @@ public class SwerveDriveModule extends SubsystemBase {
 		Ls_h_DrvMtr.config_kF(0, K_SWRV.KeSWRV_K_DrvFdFwd);
         Ls_h_DrvMtr.configMotionCruiseVelocity(K_SWRV.KeSWRV_n_Drv_MM_CruiseVel);
         Ls_h_DrvMtr.configMotionAcceleration(K_SWRV.KeSWRV_a_Drv_MM_MaxAccel);
-//      Ls_h_DrvMtr.configIntegratedSensorAbsoluteRange(K_SWRV.KeSWRV_r_DrvNormOutMin, K_SWRV.KeSWRV_r_DrvNormOutMax, (int)0);
+//      Ls_h_DrvMtr.configIntegratedSensorAbsoluteRange([K_SWRV.KeSWRV_r_DrvNormOutMin, K_SWRV.KeSWRV_r_DrvNormOutMax), (int)0);
+
         // Set Idle Mode
-        Ls_h_DrvMtr.setIdleMode(IdleMode.kBrake);
+        Ls_h_DrvMtr.setNeutralMode(NeutralMode.Brake);
 
         // Set Sensor Type
-        Ls_h_DrvMtr.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
-    
-
+        Ls_h_DrvMtr.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+ 
         // Set amperage limits
         Ls_h_DrvMtr.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxPri, 15, 0.5));
         Ls_h_DrvMtr.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxSec, 25 ,1.0));
-        Ls_h_DrvMtr.setCANTimeout(K_SWRV.KeSWRV_t_DrvCAN_TmeOut);
-
-
-//What about these from last year?
-        Ls_h_DrvMtr.setInverted(dInv[i]);
-        Ls_h_DrvMtr.setSensorPhase(sInv[i]);
+//      Ls_h_DrvMtr.setCANTimeout(K_SWRV.KeSWRV_t_DrvCAN_TmeOut);
 
     }
 	
@@ -274,15 +265,15 @@ public class SwerveDriveModule extends SubsystemBase {
     }
 
     public void resetDrvZeroPstn() {
-        Me_r_DrvEncdrZeroPstn = Ms_h_DrvEncdr.getPosition(); 
+        Me_r_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
     }
-
+ 
     public void resetRotEncdr() {
         Ms_h_RotEncdr.setPosition(0);
     }
 
     public double getDrvEncdrDelt() {
-        return Ms_h_DrvEncdr.getPosition() - Me_r_DrvEncdrZeroPstn;
+        return ((double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn);
     }
 
     public double getDrvInchesPerEncdrCnts(double Le_r_DrvEncdrNormCnts) {
@@ -294,7 +285,7 @@ public class SwerveDriveModule extends SubsystemBase {
     }
 
     public double getDrvDist() { 
-        double Le_r_DrvEncdrNormCnts = Ms_h_DrvEncdr.getPosition();
+        double Le_r_DrvEncdrNormCnts = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
         return getDrvInchesPerEncdrCnts(Le_r_DrvEncdrNormCnts);
     }
 }
