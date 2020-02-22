@@ -16,33 +16,33 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class DriveSubsystem extends SubsystemBase {
-  TalonFX leftDriveRear, leftDriveFront, rightDriveRear, rightDriveFront;
-  CANSparkMax leftRotRear, leftRotFront, rightRotRear, rightRotFront;
+  TalonFX drvFrontRight, drvFrontLeft, drvRearLeft, drvRearRight;
+  CANSparkMax rotFrontRight, rotFrontLeft, rotRearLeft, rotRearRight;
 
   public DriveSubsystem() {
-    leftDriveFront = new TalonFX(Constants.FRONT_LEFT_DRIVE_DRIVE);
-    leftDriveRear = new TalonFX(Constants.REAR_LEFT_DRIVE_DRIVE);
-    leftDriveRear.follow(leftDriveFront);
+    drvFrontLeft = new TalonFX(Constants.SWRV_FR_LT_DRV);
+    drvRearLeft = new TalonFX(Constants.SWRV_RR_LT_DRV);
+    drvRearLeft.follow(drvFrontLeft);
 
-    rightDriveFront = new TalonFX(Constants.FRONT_RIGHT_DRIVE_DRIVE);
-    rightDriveRear = new TalonFX(Constants.REAR_RIGHT_DRIVE_DRIVE);
-    rightDriveRear.follow(rightDriveFront);
+    drvFrontRight = new TalonFX(Constants.SWRV_FR_RT_DRV);
+    drvRearRight = new TalonFX(Constants.SWRV_RR_RT_DRV);
+    drvRearRight.follow(drvFrontRight);
 
-    
-    leftRotRear = new CANSparkMax(Constants.REAR_LEFT_DRIVE_ROTATE, MotorType.kBrushless);
-    leftRotFront = new CANSparkMax(Constants.FRONT_LEFT_DRIVE_ROTATE, MotorType.kBrushless);
-    rightRotRear = new CANSparkMax(Constants.REAR_RIGHT_DRIVE_ROTATE, MotorType.kBrushless);
-    rightRotFront = new CANSparkMax(Constants.FRONT_RIGHT_DRIVE_ROTATE, MotorType.kBrushless);
+
+    rotFrontRight = new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless);   
+    rotFrontLeft  = new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless);
+    rotRearLeft   = new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless);
+    rotRearRight  = new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless);
   }
 
   public void breakInDrive(double rotPower, double fwdPower) {
-    this.leftDriveFront.set(ControlMode.PercentOutput, fwdPower);
-    this.rightDriveFront.set(ControlMode.PercentOutput, fwdPower);
+    this.drvFrontLeft.set(ControlMode.PercentOutput, fwdPower);
+    this.drvFrontRight.set(ControlMode.PercentOutput, fwdPower);
 
-    leftRotRear.set(rotPower);
-    leftRotFront.set(rotPower);
-    rightRotRear.set(rotPower);
-    rightRotFront.set(rotPower);
+    rotRearLeft.set(rotPower);
+    rotFrontLeft.set(rotPower);
+    rotRearRight.set(rotPower);
+    rotFrontRight.set(rotPower);
   }
 
   @Override

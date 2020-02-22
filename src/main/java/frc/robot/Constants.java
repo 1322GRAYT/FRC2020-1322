@@ -33,15 +33,15 @@ public final class Constants {
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)
-    public static final int FRONT_RIGHT_DRIVE_ROTATE = 6;
-    public static final int REAR_RIGHT_DRIVE_ROTATE  = 1;
-    public static final int FRONT_LEFT_DRIVE_ROTATE  = 2;
-    public static final int REAR_LEFT_DRIVE_ROTATE   = 3;
+    public static final int SWRV_FR_RT_ROT           = 6;
+    public static final int SWRV_FR_LT_ROT           = 2;
+    public static final int SWRV_RR_LT_ROT           = 3;
+    public static final int SWRV_RR_RT_ROT           = 1;
     // Drive Motors (TALON FX)
-    public static final int FRONT_RIGHT_DRIVE_DRIVE = 4;
-    public static final int REAR_RIGHT_DRIVE_DRIVE  = 1;
-    public static final int FRONT_LEFT_DRIVE_DRIVE  = 2;
-    public static final int REAR_LEFT_DRIVE_DRIVE   = 3;
+    public static final int SWRV_FR_RT_DRV           = 4;
+    public static final int SWRV_FR_LT_DRV           = 2;
+    public static final int SWRV_RR_LT_DRV           = 3;
+    public static final int SWRV_RR_RT_DRV           = 1;
     // Shooter Motors (SPARK MAX)
     public static final int SHOOTER_ONE             = 4;
     public static final int SHOOTER_TWO             = 5;
