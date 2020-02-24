@@ -17,4 +17,9 @@ public class SwrvMap {
   public static final int LtRr = 2; // Swerve Drive Caddy: Left  Rear
   public static final int RtRr = 3; // Swerve Drive Caddy: Right Rear
   public static final int NumOfCaddies = 4; //Total Number of Swerve Drive Caddies
+
+  public static final int RtSd = 0; // Swerve Drive Bank: Right Side
+  public static final int LtSd = 1; // Swerve Drive Bank: Left  Side
+  public static final int NumOfBanks = 2; //Total Number of Swerve Drive Caddies
+
 }

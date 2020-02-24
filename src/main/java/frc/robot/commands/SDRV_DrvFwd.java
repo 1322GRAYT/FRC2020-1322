@@ -7,32 +7,43 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.Hand;
-import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.SwerveDriveSubsystem;
 
-public class BreakInDrive extends CommandBase {
-  private SwerveDriveSubsystem swds;
-  private XboxController auxStick;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+
+public class SDRV_DrvFwd extends CommandBase {
   /**
-   * Creates a new BreakInDrive.
+   * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
+   * Forward or Backwards at a specific Power Request. 
    */
-  public BreakInDrive(SwerveDriveSubsystem swds, XboxController auxStick) {
+  SwerveDriveSubsystem swds;
+
+  private double d1; 
+  private double startAngle;
+  private double speed;
+  public static final double WHEEL_CIRCUMFERENCE = 4 * Math.PI;
+  public static final double TOTAL_SENSOR_POS = 1024;
+  public static final double DISTANCE = WHEEL_CIRCUMFERENCE / TOTAL_SENSOR_POS;
+
+  public SDRV_DrvFwd(SwerveDriveSubsystem swds, double Le_l_DsrdDist, double speed) {
     this.swds = swds;
-    this.auxStick = auxStick;
+
+    d1 = DISTANCE * Le_l_DsrdDist * 12;
+    this.speed = speed;
     addRequirements(this.swds);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    startAngle = swds.getNavX().getYaw();
+    swds.resetDrvEncdrs();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swds.cntrlBrkInSwrvDrv(auxStick.getY(Hand.kLeft), auxStick.getY(Hand.kRight));
+    swds.driveForwardToDist(d1, startAngle, 0.5);
   }
 
   // Called once the command ends or is interrupted.
@@ -43,6 +54,6 @@ public class BreakInDrive extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return Math.abs(swds.calcDrvPosErr(d1)) < DISTANCE;
   }
 }

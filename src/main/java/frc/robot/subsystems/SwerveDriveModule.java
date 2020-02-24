@@ -31,32 +31,26 @@ public class SwerveDriveModule extends SubsystemBase {
     private final CANSparkMax Ms_h_RotMtr;
     private final CANEncoder Ms_h_RotEncdr;
 
-    private final TalonFX Ms_h_DrvMtr;
-
     private double Me_r_ModRevs;
 
     private final double Me_Deg_RotEncdrZeroOfst;
     private double Me_t_RotMtrStlInitTm;
  
-    private double Me_r_DrvEncdrZeroPstn;
     private TeMtrDirctn Me_e_DrvMtrDirctn;
     private boolean Me_b_DrvMtrDirctnUpdInhb;
     private boolean Me_b_DrvMtrDirctnUpdTrig;
 
 
-	SwerveDriveModule(int Le_i_ModIdx, CANSparkMax Ls_h_RotMtr, TalonFX Ls_h_DrvMtr, double Le_Deg_RotZeroOfst) {
+	SwerveDriveModule(int Le_i_ModIdx, CANSparkMax Ls_h_RotMtr, double Le_Deg_RotZeroOfst) {
         Me_i_ModIdx = Le_i_ModIdx;
         Me_r_ModRevs = 0;
         
-		Ms_h_RotMtr = Ls_h_RotMtr;
+		    Ms_h_RotMtr = Ls_h_RotMtr;
         Ms_h_RotEncdr = Ms_h_RotMtr.getEncoder();
 
         Me_Deg_RotEncdrZeroOfst = Le_Deg_RotZeroOfst;
         Me_t_RotMtrStlInitTm = 0;
 
-        Ms_h_DrvMtr = Ls_h_DrvMtr;
-        
-        Me_r_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
         Me_e_DrvMtrDirctn = TeMtrDirctn.Fwd;
         Me_b_DrvMtrDirctnUpdInhb = false;
         Me_b_DrvMtrDirctnUpdTrig = false;
@@ -68,13 +62,13 @@ public class SwerveDriveModule extends SubsystemBase {
         CANPIDController Ms_h_ROT_PID_Cntrlr = Ls_h_RotMtr.getPIDController();
         Ms_h_RotMtr.restoreFactoryDefaults();
 
-		// set PID coefficients
-		Ms_h_ROT_PID_Cntrlr.setP(K_SWRV.KeSWRV_K_RotProp);
-		Ms_h_ROT_PID_Cntrlr.setI(K_SWRV.KeSWRV_K_RotIntgl);
-		Ms_h_ROT_PID_Cntrlr.setD(K_SWRV.KeSWRV_K_RotDeriv);
-		Ms_h_ROT_PID_Cntrlr.setIZone(K_SWRV.KeSWRV_e_RotIntglErrMaxEnbl);
-		Ms_h_ROT_PID_Cntrlr.setFF(K_SWRV.KeSWRV_K_RotFdFwd);
-		Ms_h_ROT_PID_Cntrlr.setOutputRange(K_SWRV.KeSWRV_r_RotNormOutMin, K_SWRV.KeSWRV_r_RotNormOutMax);
+		    // set PID coefficients
+		    Ms_h_ROT_PID_Cntrlr.setP(K_SWRV.KeSWRV_K_RotProp);
+		    Ms_h_ROT_PID_Cntrlr.setI(K_SWRV.KeSWRV_K_RotIntgl);
+		    Ms_h_ROT_PID_Cntrlr.setD(K_SWRV.KeSWRV_K_RotDeriv);
+		    Ms_h_ROT_PID_Cntrlr.setIZone(K_SWRV.KeSWRV_e_RotIntglErrMaxEnbl);
+		    Ms_h_ROT_PID_Cntrlr.setFF(K_SWRV.KeSWRV_K_RotFdFwd);
+		    Ms_h_ROT_PID_Cntrlr.setOutputRange(K_SWRV.KeSWRV_r_RotNormOutMin, K_SWRV.KeSWRV_r_RotNormOutMax);
            
         // Set Idle Mode
         Ls_h_RotMtr.setIdleMode(IdleMode.kBrake);
@@ -88,46 +82,11 @@ public class SwerveDriveModule extends SubsystemBase {
         Ls_h_RotMtr.setSecondaryCurrentLimit(K_SWRV.KeSWRV_I_RotDrvrLmtMaxSec,0);
         Ls_h_RotMtr.setCANTimeout(K_SWRV.KeSWRV_t_RotCAN_TmeOut);
 
-
-        
-        /*****************************************************************/
-        /* Drive Control PID Controller Configurations                   */
-        /*****************************************************************/
-        Ls_h_DrvMtr.configFactoryDefault();
-        Ls_h_DrvMtr.setInverted(false);
-        Ls_h_DrvMtr.setSensorPhase(false);
-
-		// set PID coefficients
-		Ls_h_DrvMtr.config_kP(0, K_SWRV.KeSWRV_K_DrvProp);
-		Ls_h_DrvMtr.config_kI(0, K_SWRV.KeSWRV_K_DrvIntgl);
-		Ls_h_DrvMtr.config_kD(0, K_SWRV.KeSWRV_K_DrvDeriv);
-		Ls_h_DrvMtr.config_IntegralZone(0, K_SWRV.KeSWRV_e_DrvIntglErrMaxEnbl);
-		Ls_h_DrvMtr.config_kF(0, K_SWRV.KeSWRV_K_DrvFdFwd);
-        Ls_h_DrvMtr.configMotionCruiseVelocity(K_SWRV.KeSWRV_n_Drv_MM_CruiseVel);
-        Ls_h_DrvMtr.configMotionAcceleration(K_SWRV.KeSWRV_a_Drv_MM_MaxAccel);
-//      Ls_h_DrvMtr.configIntegratedSensorAbsoluteRange([K_SWRV.KeSWRV_r_DrvNormOutMin, K_SWRV.KeSWRV_r_DrvNormOutMax), (int)0);
-
-        // Set Idle Mode
-        Ls_h_DrvMtr.setNeutralMode(NeutralMode.Brake);
-
-        // Set Sensor Type
-        Ls_h_DrvMtr.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
- 
-        // Set amperage limits
-        Ls_h_DrvMtr.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxPri, 15, 0.5));
-        Ls_h_DrvMtr.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxSec, 25 ,1.0));
-//      Ls_h_DrvMtr.setCANTimeout(K_SWRV.KeSWRV_t_DrvCAN_TmeOut);
-
     }
 	
 
     public CANSparkMax getRotMtr() {
         return Ms_h_RotMtr;
-    }
-
-
-    public TalonFX getDrvMtr() {
-        return Ms_h_DrvMtr;
     }
 
 
@@ -295,35 +254,4 @@ public class SwerveDriveModule extends SubsystemBase {
     }
 
 
-    public void setDrvMtrSpd(double Le_r_MtrSpd) {
-        double Le_r_DirctnSclr = (Me_e_DrvMtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
-
-        Ms_h_DrvMtr.set(ControlMode.Velocity, (Le_r_DirctnSclr * Le_r_MtrSpd));
-    }
-
-
-    public void resetDrvZeroPstn() {
-        Me_r_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
-    }
-
-
-    public double getDrvEncdrDelt() {
-        return ((double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn);
-    }
-
-
-    public double getDrvInchesPerEncdrCnts(double Le_r_DrvEncdrNormCnts) {
-         return Le_r_DrvEncdrNormCnts / K_SWRV.KeSWRV_Cf_DrvMtrEncdrCntsToInch;
-    }
-
-
-    public int getDrvEncdrCntsPerInches(double Le_l_DrvWhlDistInches) {
-         return (int) Math.round(Le_l_DrvWhlDistInches * K_SWRV.KeSWRV_Cf_DrvMtrEncdrCntsToInch);
-    }
-
-
-    public double getDrvDist() { 
-        double Le_r_DrvEncdrNormCnts = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
-        return getDrvInchesPerEncdrCnts(Le_r_DrvEncdrNormCnts);
-    }
 }

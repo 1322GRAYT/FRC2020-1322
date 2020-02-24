@@ -30,8 +30,7 @@ public class RobotContainer {
   private final TurretSubsystem shooterSubsystem = new TurretSubsystem();
   private final BallSubsystem ballSubsystem = new BallSubsystem();
   private final LiftSubsystem liftSubsystem = new LiftSubsystem();
-  private final DriveSubsystem driveSubsystem = new DriveSubsystem();
-  private final SwerveDriveSubsystem SwrvDrvSys = new SwerveDriveSubsystem();	
+  private final SwerveDriveSubsystem swerveDriveSystem = new SwerveDriveSubsystem();	
   
   private XboxController driverStick;
   private XboxController auxStick;
@@ -54,9 +53,10 @@ public class RobotContainer {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(shooterSubsystem, new ManualTurret(shooterSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
-    CommandScheduler.getInstance().setDefaultCommand(driveSubsystem, new BreakInDrive(driveSubsystem, driverStick));
-  //  CommandScheduler.getInstance().setDefaultCommand(SwrvDrvSys, new TBD(SwrvDrvSys, driverStick));
+    CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_HaltDrvs(swerveDriveSystem));
   }
+
+
 
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by
