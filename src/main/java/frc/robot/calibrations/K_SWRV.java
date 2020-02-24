@@ -21,7 +21,7 @@ public class K_SWRV {
 	  /** KeSWRV_b_DebugEnbl: Swerve Drive System Enable
      *  Calibartion to send data to dashbord to debug..
      */
-    public static final boolean KeSWRV_b_DebugEnbl = false;
+    public static final boolean KeSWRV_b_DebugEnbl = true;
 
     
 	  /** KeSWRV_b_DrvMtrRotDirctnInvertInhb: Swerve Drive System Enable
@@ -29,6 +29,18 @@ public class K_SWRV {
      *  the Drive System is in Rotate Mode.
      */
     public static final boolean KeSWRV_b_DrvMtrRotDirctnInvertInhb = false;
+
+
+  /**************************************************/
+  /*  Swerve Drive General System Calibrations      */
+ 	/**************************************************/	 	
+
+	  /** KeSWRV_r_CntlrDeadBandThrsh: Swerve Drive System: Normalized
+     * Power Dead-Band Threshold that must be met before a X-Box Controller
+     * Joystick Input is recognized.  If the Absolute value of the Input
+     * is below the Threshold it will be ignored (i.e. set to Zero).
+     */
+    public static final double KeSWRV_r_CntlrDeadBandThrsh = 0.2;
 
 
   /**************************************************/

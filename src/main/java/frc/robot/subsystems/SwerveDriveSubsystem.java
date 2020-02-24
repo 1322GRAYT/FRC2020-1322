@@ -6,14 +6,13 @@ import frc.robot.calibrations.K_SWRV;
 import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.ctre.phoenix.motorcontrol.*;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
@@ -26,15 +25,17 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	private static final double VeSDRV_r_ChassisTrkRat = Math.sqrt(Math.pow(K_SWRV.KeSWRV_l_ChassisWhlBase, 2) + Math.pow(K_SWRV.KeSWRV_l_ChassisTrkWdth, 2));
 
 	private SwerveDriveModule[] SwrvDrvMod = new SwerveDriveModule[] {                            
-		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless),  0), //real:298 practice: 56
-		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless),  0), //real:355 practice: 190
-		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless),  0), //real:293 practice: 59
-		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless),  0)  //real:390 practice: 212
+		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_RT_DRV), 0), //real:298 practice: 56
+		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_LT_DRV), 0), //real:355 practice: 190
+		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_LT_DRV), 0), //real:293 practice: 59
+		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_RT_DRV), 0)  //real:390 practice: 212
 	};
 
-	private TalonFX[] Va_h_DrvMtr = new TalonFX[] {
-		new TalonFX(Constants.SWRV_RR_LT_DRV),
-		new TalonFX(Constants.SWRV_RR_LT_DRV)	
+	private DigitalInput[] VaSDRV_b_RotZeroDtcd = new DigitalInput[] {
+		new DigitalInput(Constants.SWRV_ZERO_FR_RT),
+		new DigitalInput(Constants.SWRV_ZERO_FR_LT),
+		new DigitalInput(Constants.SWRV_ZERO_RR_LT),
+		new DigitalInput(Constants.SWRV_ZERO_RR_RT)
 	};
 
 	private AHRS mNavX = new AHRS(SPI.Port.kMXP, (byte) 200);
@@ -51,9 +52,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	double[] VaSDRV_Deg_RotAngCalcCnvrtdLtch = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_Deg_RotAngCalcLtch   = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_Deg_RotAngTgt        = new double[SwrvMap.NumOfCaddies];
-	double[] VaSDRV_r_RotEncdrTgt        = new double[SwrvMap.NumOfCaddies];
-      
-	double[] VaSDRV_r_DrvEncdrZeroPstn   = new double[SwrvMap.NumOfBanks];    
+	double[] VaSDRV_r_RotEncdrTgt        = new double[SwrvMap.NumOfCaddies];      
 
 	double[] VaSDRV_v_DrvSpdCalcRaw      = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_v_DrvSpdCalcCnvrtd   = new double[SwrvMap.NumOfCaddies];
@@ -63,10 +62,16 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 	private double VeSDRV_r_MtrSpdMult;
 
-    /* Subsystem Constructor */
+
+
+	/*******************************/
+	/* Subsystem Constructor       */
+	/*******************************/
 	public SwerveDriveSubsystem() {
 		zeroGyro(); 
 
+		SwrvDrvMod[SwrvMap.LtRr].getDrvMtr().follow(SwrvDrvMod[SwrvMap.LtFt].getDrvMtr());
+		SwrvDrvMod[SwrvMap.RtRr].getDrvMtr().follow(SwrvDrvMod[SwrvMap.RtFt].getDrvMtr());
 
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
 			VaSDRV_Deg_RotAngActRaw[i] = 0;
@@ -76,48 +81,13 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 			VaSDRV_Deg_RotAngTgt[i] = 0;
 			VaSDRV_r_RotEncdrTgt[i] = 0;
 		}
-
-		for (int i = 0; i < SwrvMap.NumOfBanks; i++)  {
-		    Va_h_DrvMtr[i].setInverted(true);
-		    Va_h_DrvMtr[i].setNeutralMode(NeutralMode.Brake);
-		    resetDrvZeroPstn(i);
-		    VaSDRV_r_DrvEncdrZeroPstn[i] = (double)Va_h_DrvMtr[i].getSelectedSensorPosition();
-		}
     
 		VeSDRV_v_DrvSpdMax = 0.0;
 		VeSDRV_r_MtrSpdMult = 1.0;
 
-		
-        /*****************************************************************/
-        /* Drive Control PID Controller Configurations                   */
-		/*****************************************************************/
-		for (int i = 0; i < SwrvMap.NumOfBanks; i++) {
-            Va_h_DrvMtr[i].configFactoryDefault();
-            Va_h_DrvMtr[i].setInverted(false);
-            Va_h_DrvMtr[i].setSensorPhase(false);
-
-		    // set PID coefficients
-			Va_h_DrvMtr[i].config_kP(0, K_SWRV.KeSWRV_K_DrvProp);
-		    Va_h_DrvMtr[i].config_kI(0, K_SWRV.KeSWRV_K_DrvIntgl);
-		    Va_h_DrvMtr[i].config_kD(0, K_SWRV.KeSWRV_K_DrvDeriv);
-		    Va_h_DrvMtr[i].config_IntegralZone(0, K_SWRV.KeSWRV_e_DrvIntglErrMaxEnbl);
-		    Va_h_DrvMtr[i].config_kF(0, K_SWRV.KeSWRV_K_DrvFdFwd);
-            Va_h_DrvMtr[i].configMotionCruiseVelocity(K_SWRV.KeSWRV_n_Drv_MM_CruiseVel);
-            Va_h_DrvMtr[i].configMotionAcceleration(K_SWRV.KeSWRV_a_Drv_MM_MaxAccel);
-//          Va_h_DrvMtr[i].configIntegratedSensorAbsoluteRange([K_SWRV.KeSWRV_r_DrvNormOutMin, K_SWRV.KeSWRV_r_DrvNormOutMax), (int)0);
-
-            // Set Idle Mode
-            Va_h_DrvMtr[i].setNeutralMode(NeutralMode.Brake);
-
-            // Set Sensor Type
-            Va_h_DrvMtr[i].configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
- 
-            // Set amperage limits
-            Va_h_DrvMtr[i].configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxPri, 15, 0.5));
-            Va_h_DrvMtr[i].configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxSec, 25 ,1.0));
-//          Va_h_DrvMtr[i].setCANTimeout(K_SWRV.KeSWRV_t_DrvCAN_TmeOut);
-		}
 	}
+
+
 
     /*********************************************/
 	/*     Subsystem Device Interfaces           */
@@ -131,9 +101,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		return SwrvDrvMod[i];
 	}
 
-	public TalonFX getDrvMtr(int i) {
-			return Va_h_DrvMtr[i];
-	}
 
 
 
@@ -254,6 +221,10 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		}
 		setDrvMtrSpd(SwrvMap.RtSd, VaSDRV_v_DrvSpdCalcRaw[SwrvMap.RtFt]);
 		setDrvMtrSpd(SwrvMap.LtSd, VaSDRV_v_DrvSpdCalcRaw[SwrvMap.LtFt]);
+
+        if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
+		    updateSmartDash();	
+        }
 
 	}
 
@@ -405,17 +376,69 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 
 
-    /*************************************************/
-	/*     Subsystem Command and Interfaces     */
-	/*************************************************/
+    /*****************************************************/
+	/*     Subsystem Command aMethods and Interfaces     */
+	/*****************************************************/
 
+	public double applyDB(double Le_r_PwrRqstIn) {
+		double Le_r_PwrRqstMod = Le_r_PwrRqstIn;
+		if (Math.abs(Le_r_PwrRqstMod) < K_SWRV.KeSWRV_r_CntlrDeadBandThrsh) {
+		  Le_r_PwrRqstMod = 0;
+		}
+		return(Le_r_PwrRqstMod);
+	}    
 
 	public void haltSwerveDrive(){
-
-		HolonomicDrv(0, 0, 0);
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+			SwrvDrvMod[i].setRotMtrPwr(0);
+            SwrvDrvMod[i].setDrvMtrPwr(0);
+		}
 	}
 
 
+	public void sweepSwerveCaddyToAng(int Le_i_SwrvModIdx, TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
+		double Le_r_RotDirctnSclr = 1;
+
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+			if (i == Le_i_SwrvModIdx)  {
+			  if (Le_e_RotDirctn == TeRotDirctn.CCW)
+			      Le_r_RotDirctnSclr = -1;
+			  SwrvDrvMod[i].setRotMtrPwr(Le_r_PwrLvl * Le_r_RotDirctnSclr);
+			  SwrvDrvMod[i].setDrvMtrPwr(0);
+			}
+			else
+			  SwrvDrvMod[i].setRotMtrPwr(0);
+			  SwrvDrvMod[i].setDrvMtrPwr(0);
+		}
+	}
+
+
+	public void runSwerveCaddyAtPwr(int Le_i_SwrvBnkIdx, TeMtrDirctn Le_e_MtrDirctn, double Le_r_PwrLvl) {
+
+		double Le_r_MtrDirctnSclr = (Le_e_MtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
+
+		if (Le_i_SwrvBnkIdx == SwrvMap.RtSd) {
+			SwrvDrvMod[SwrvMap.RtFt].setDrvMtrPwr(Le_r_MtrDirctnSclr * Le_r_PwrLvl);
+			SwrvDrvMod[SwrvMap.RtRr].setDrvMtrPwr(Le_r_MtrDirctnSclr * Le_r_PwrLvl);
+			SwrvDrvMod[SwrvMap.LtFt].setDrvMtrPwr(0);
+			SwrvDrvMod[SwrvMap.LtRr].setDrvMtrPwr(0);
+		}
+		else {
+			SwrvDrvMod[SwrvMap.LtFt].setDrvMtrPwr(Le_r_MtrDirctnSclr * Le_r_PwrLvl);
+			SwrvDrvMod[SwrvMap.LtRr].setDrvMtrPwr(Le_r_MtrDirctnSclr * Le_r_PwrLvl);
+			SwrvDrvMod[SwrvMap.RtFt].setDrvMtrPwr(0);
+			SwrvDrvMod[SwrvMap.RtRr].setDrvMtrPwr(0);
+		}
+
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+	        SwrvDrvMod[i].setRotMtrPwr(0);
+		}
+	}
+
+
+	public double getSwerveCaddyAng(int Le_i_SwrvMod) {
+	    return(SwrvDrvMod[Le_i_SwrvMod].getRotActAngRaw());
+	}
 
 
 	public void driveForwardAtSpd(double Le_Deg_HdgAng, double Le_r_PwrLvl){
@@ -485,9 +508,10 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
-	public double calcDrvPosErr(double d1) {
-		return d1 - getDrvDist(SwrvMap.RtSd);
+	public double calcDrvPosErr(double Le_l_DrvDistTgtInches) {
+		return Le_l_DrvDistTgtInches - SwrvDrvMod[SwrvMap.RtFt].getDrvDist();
 	}
+
 
 	public void cmndDrvsToEncdrPos(double Le_r_EncdrPos) {
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
@@ -503,11 +527,13 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		}
 	}
 
+
 	public void resetDrvEncdrs() {
 		for (int i = 0; i < SwrvMap.NumOfBanks; i++ ) {
-			Va_h_DrvMtr[i].setSelectedSensorPosition(0);
+			SwrvDrvMod[i].resetDrvEncdrPstn();
 		}
 	}
+
 
 	public void resetRotEncdrs() {
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
@@ -516,48 +542,44 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
+	public void resetCaddyRotEncdr(int Le_i_SwrvModIdx) {
+		SwrvDrvMod[Le_i_SwrvModIdx].resetRotEncdr();
+	}
+
+
+    public void resetCaddyRotZeroOfst(int Le_i_SwrvModIdx) {
+        SwrvDrvMod[Le_i_SwrvModIdx].getRotActAngRaw();
+    }
+
+
+
     /*************************************************/
 	/*     Subsystem Data Interfaces                 */
 	/*************************************************/
 
+	public boolean getRotZeroDtctd(int Le_i_SwrvModIdx) {
+	     return(VaSDRV_b_RotZeroDtcd[Le_i_SwrvModIdx].get());
+	}
 
-    public void setDrvMtrSpd(int Le_i_MtrBnk, double Le_r_MtrSpd) {
+    public void setDrvMtrSpd(int Le_i_MtrBnk, double Le_r_DrvPwr) {
 		TeMtrDirctn Le_e_DrvMtrDirctn;
+		double Le_r_DirctnSclr;
 		
 		if (Le_i_MtrBnk == SwrvMap.RtSd)
 		    Le_e_DrvMtrDirctn = SwrvDrvMod[SwrvMap.RtFt].getDrvMtrDirctn();
 	    else
  		    Le_e_DrvMtrDirctn = SwrvDrvMod[SwrvMap.LtFt].getDrvMtrDirctn();
 
-        double Le_r_DirctnSclr = (Le_e_DrvMtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
+        Le_r_DirctnSclr = (Le_e_DrvMtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
 
-        Va_h_DrvMtr[Le_i_MtrBnk].set(ControlMode.Velocity, (Le_r_DirctnSclr * Le_r_MtrSpd));
-    }
-
-
-    public void resetDrvZeroPstn(int Le_i_MtrBnk) {
-        VaSDRV_r_DrvEncdrZeroPstn[Le_i_MtrBnk] = (double)Va_h_DrvMtr[Le_i_MtrBnk].getSelectedSensorPosition();
-    }
-
-
-    public double getDrvEncdrDelt(int Le_i_MtrBnk) {
-        return ((double)Va_h_DrvMtr[Le_i_MtrBnk].getSelectedSensorPosition() - VaSDRV_r_DrvEncdrZeroPstn[Le_i_MtrBnk]);
-    }
-
-
-    public double getDrvInchesPerEncdrCnts(double Le_r_DrvEncdrNormCnts) {
-         return Le_r_DrvEncdrNormCnts / K_SWRV.KeSWRV_Cf_DrvMtrEncdrCntsToInch;
-    }
-
-
-    public int getDrvEncdrCntsPerInches(double Le_l_DrvWhlDistInches) {
-         return (int) Math.round(Le_l_DrvWhlDistInches * K_SWRV.KeSWRV_Cf_DrvMtrEncdrCntsToInch);
-    }
-
-
-    public double getDrvDist(int Le_i_MtrBnk) { 
-        double Le_r_DrvEncdrNormCnts = (double)Va_h_DrvMtr[Le_i_MtrBnk].getSelectedSensorPosition();
-        return getDrvInchesPerEncdrCnts(Le_r_DrvEncdrNormCnts);
+		if (Le_i_MtrBnk == SwrvMap.RtSd) {
+			SwrvDrvMod[SwrvMap.RtFt].setDrvMtrPwr(Le_r_DirctnSclr * Le_r_DrvPwr);
+			SwrvDrvMod[SwrvMap.RtRr].setDrvMtrPwr(Le_r_DirctnSclr * Le_r_DrvPwr);
+		}
+		else {
+			SwrvDrvMod[SwrvMap.LtFt].setDrvMtrPwr(Le_r_DirctnSclr * Le_r_DrvPwr);
+			SwrvDrvMod[SwrvMap.LtRr].setDrvMtrPwr(Le_r_DirctnSclr * Le_r_DrvPwr);
+		}
     }
 
 
@@ -569,34 +591,28 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		this.VeSDRV_r_MtrSpdMult = LeSDRV_r_MtrSpdMult;
 	}	
 
+
+
+
+    /*************************************************/
+	/*     Subsystem Instrumenation Display          */
+	/*************************************************/
+
+	private void updateSmartDash() {
+	/* Print to SmartDashboard */
+
+	for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+	  
+	   SmartDashboard.putNumber("Target Angle Raw (Deg)   " + i ,  VaSDRV_Deg_RotAngCalcRaw[i]);
+       SmartDashboard.putNumber("Target Angle Corr (Deg)  " + i ,  VaSDRV_Deg_RotAngCalcLtch[i]);
+       SmartDashboard.putNumber("Actual Angle Raw (Deg)   " + i ,  VaSDRV_Deg_RotAngActRaw[i]);
+       SmartDashboard.putNumber("Actual Angle Corr (Deg)  " + i ,  VaSDRV_Deg_RotAngAct[i]);
+	   SmartDashboard.putNumber("Target Speed Raw (N Pwr) " + i ,  VaSDRV_v_DrvSpdCalcRaw[i]);
+       SmartDashboard.putString("Drive Motor Direction    " + i ,  SwrvDrvMod[i].getDrvMtrDirctn().toString());
+	   }
+
+	}
+
+
 }
-
-
-
-/*
-
-        if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
-            / * Print to SmartDashboard * /
-            SmartDashboard.putNumber("Module Target Angle Caddy (Degrees) " + Me_i_ModIdx, Le_Deg_RotAngTgt);
-            SmartDashboard.putNumber("Module Target Angle Caddy (Norm Rot) " + Me_i_ModIdx, Le_r_RotAngTgt);
-            SmartDashboard.putNumber("Module Target Angle Motor (Norm Rot) " + Me_i_ModIdx, Le_r_RotAngTgtMtr);
-        }
-
-
-	    if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
-            / * Print to SmartDashboard * /
-          SmartDashboard.putNumber("Module Actual Angle Front (Enc Counts) " + Me_i_ModIdx, Ms_h_RotEncdr.getPosition());
-          SmartDashboard.putNumber("Module Actual Angle ReAR (Enc Counts) " + Me_i_ModIdx, Ms_h_RotEncdr.getPosition());
-          SmartDashboard.putNumber("Module Actual Angle (Degrees)    " + Me_i_ModIdx, Le_Deg_RotAngAct);
-          SmartDashboard.putNumber("Module Angle Error (Degrees)     " + Me_i_ModIdx, Le_Deg_RotErrAbs);
-          SmartDashboard.putString("Module Driver Motor Init Direction  " + Me_i_ModIdx, Me_e_DrvMtrDirctn.toString());
-        }
-
-        if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
-            / * Print to SmartDashboard * /
-          SmartDashboard.putBoolean("Module Direction Update Trigger  " + Me_i_ModIdx, Me_b_DrvMtrDirctnUpdTrig);
-          SmartDashboard.putString("Module Driver Motor Update  Direction    " + Me_i_ModIdx, Me_e_DrvMtrDirctn.toString());
-        }
- */
-
 

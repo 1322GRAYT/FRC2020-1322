@@ -7,53 +7,49 @@
 
 package frc.robot.commands;
 
+import frc.robot.subsystems.SwerveDriveModule;
 import frc.robot.subsystems.SwerveDriveSubsystem;
-
+import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class SDRV_DrvFwdToDist extends CommandBase {
+public class SDRV_DrvFwdTest extends CommandBase {
   /**
    * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
    * Forward or Backwards at a specific Power Request. 
    */
-  SwerveDriveSubsystem swds;
+  private SwerveDriveSubsystem swerveDriveSubsystem;
+  private int Xe_i_BnkIdx;
+  private double Xe_r_DrvPwr;
+  private TeMtrDirctn Xe_e_MtrDirctn;
 
-  private double d1; 
-  private double startAngle;
-  private double speed;
-  public static final double WHEEL_CIRCUMFERENCE = 4 * Math.PI;
-  public static final double TOTAL_SENSOR_POS = 1024;
-  public static final double DISTANCE = WHEEL_CIRCUMFERENCE / TOTAL_SENSOR_POS;
-
-  public SDRV_DrvFwdToDist(SwerveDriveSubsystem swds, double Le_l_DsrdDist, double speed) {
-    this.swds = swds;
-
-    d1 = DISTANCE * Le_l_DsrdDist * 12;
-    this.speed = speed;
-    addRequirements(this.swds);
+  public SDRV_DrvFwdTest(SwerveDriveSubsystem swerveDriveSubsystem, int Xe_i_BnkIdx, double Xe_r_DrvPwr) {
+    this.swerveDriveSubsystem = swerveDriveSubsystem;
+    this.Xe_i_BnkIdx = Xe_i_BnkIdx;
+    this.Xe_r_DrvPwr = Xe_r_DrvPwr;
+    addRequirements(this.swerveDriveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    startAngle = swds.getNavX().getYaw();
-    swds.resetDrvEncdrs();
+    Xe_e_MtrDirctn = TeMtrDirctn.Fwd;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swds.driveForwardToDist(d1, startAngle, 0.5);
+    swerveDriveSubsystem.runSwerveCaddyAtPwr(Xe_i_BnkIdx, Xe_e_MtrDirctn, Xe_r_DrvPwr);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    swerveDriveSubsystem.runSwerveCaddyAtPwr(Xe_i_BnkIdx, Xe_e_MtrDirctn, 0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return Math.abs(swds.calcDrvPosErr(d1)) < DISTANCE;
+    return (false);
   }
 }

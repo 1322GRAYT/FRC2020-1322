@@ -31,7 +31,7 @@ public final class Constants {
         GAIN_POS_CONTROL, GAIN_ROT_CONTROL
     }
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
-    // NOTE: These are tenitive and are subject to change
+    // NOTE: These are tentative and are subject to change
     // Caddy Rotation Motors (SPARK MAX)
     public static final int SWRV_FR_RT_ROT           = 6;
     public static final int SWRV_FR_LT_ROT           = 2;
@@ -61,8 +61,12 @@ public final class Constants {
     public static final int COLOR_WHEEL_SPINNER     = 10;
     
     /* Digital Inputs */
-    public static final int BALL_SENSE_INPUT = 1;
+    public static final int BALL_SENSE_INPUT  = 1;
     public static final int BALL_SENSE_OUTPUT = 2;    
+    public static final int SWRV_ZERO_FR_RT   = 4;
+    public static final int SWRV_ZERO_FR_LT   = 6;
+    public static final int SWRV_ZERO_RR_LT   = 5;
+    public static final int SWRV_ZERO_RR_RT   = 3;
 
     /* Air Things */
     public static final int HANG_BAR_0 = 0;

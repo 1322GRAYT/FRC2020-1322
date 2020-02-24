@@ -16,10 +16,10 @@ public class SDRV_HaltDrvs extends CommandBase {
    * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
    * Forward or Backwards at a specific Power Request. 
    */
-  SwerveDriveSubsystem swerveDriveSystem;
+  private SwerveDriveSubsystem swerveDriveSystem;
 
-  public SDRV_HaltDrvs(SwerveDriveSubsystem swds) {
-    this.swerveDriveSystem = swds;
+  public SDRV_HaltDrvs(SwerveDriveSubsystem swerveDriveSystem) {
+    this.swerveDriveSystem = swerveDriveSystem;
     addRequirements(this.swerveDriveSystem);
   }
 

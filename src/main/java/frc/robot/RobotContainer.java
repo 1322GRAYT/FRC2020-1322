@@ -53,10 +53,20 @@ public class RobotContainer {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(shooterSubsystem, new ManualTurret(shooterSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
-    CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_HaltDrvs(swerveDriveSystem));
-  }
+    CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_DrvManual(swerveDriveSystem, driverStick)); }
 
 
+  /* X-Box Controller Number Assignments */
+  /* 1:  Button A
+     2:  Button B
+     3:  Button X
+     4:  Button Y
+     5:  Bumper Left
+     6:  Bumper Right
+     7:  Button Start
+     8:  Button Menu
+     9:  Button Left Joystick Press
+     10: Button Right Joystick Press
 
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by
@@ -79,6 +89,15 @@ public class RobotContainer {
     // Color Wheel Commands (Start for Gain Pos Control, Select for Gain Rot Control)
     new JoystickButton(auxStick, 7).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_POS_CONTROL));
     new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_ROT_CONTROL));
+
+    /* For Testing Only */
+    new JoystickButton(driverStick, 1).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtRr));
+    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtFt));
+    new JoystickButton(driverStick, 3).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtRr));
+    new JoystickButton(driverStick, 4).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtFt));
+    new JoystickButton(driverStick, 5).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.LtSd, 0.5));
+    new JoystickButton(driverStick, 6).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.RtSd, 0.5));
+ 
   }
 
 

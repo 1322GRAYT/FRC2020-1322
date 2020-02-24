@@ -7,53 +7,50 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import frc.robot.subsystems.SwerveDriveSubsystem;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class SDRV_DrvFwd extends CommandBase {
+public class SDRV_DrvManual extends CommandBase {
   /**
    * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
    * Forward or Backwards at a specific Power Request. 
    */
-  SwerveDriveSubsystem swds;
+  private SwerveDriveSubsystem swerveDriveSubsystem;
+  private XboxController driverStick;
+  private double Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr;
 
-  private double d1; 
-  private double startAngle;
-  private double speed;
-  public static final double WHEEL_CIRCUMFERENCE = 4 * Math.PI;
-  public static final double TOTAL_SENSOR_POS = 1024;
-  public static final double DISTANCE = WHEEL_CIRCUMFERENCE / TOTAL_SENSOR_POS;
-
-  public SDRV_DrvFwd(SwerveDriveSubsystem swds, double Le_l_DsrdDist, double speed) {
-    this.swds = swds;
-
-    d1 = DISTANCE * Le_l_DsrdDist * 12;
-    this.speed = speed;
-    addRequirements(this.swds);
+  public SDRV_DrvManual(SwerveDriveSubsystem swerveDriveSubsystem, XboxController driverStick) {
+    this.swerveDriveSubsystem = swerveDriveSubsystem;
+    this.driverStick = driverStick;
+    addRequirements(this.swerveDriveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    startAngle = swds.getNavX().getYaw();
-    swds.resetDrvEncdrs();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swds.driveForwardToDist(d1, startAngle, 0.5);
+    Xe_r_LongPwr = swerveDriveSubsystem.applyDB(-driverStick.getY(Hand.kLeft));
+    Xe_r_LatPwr  = swerveDriveSubsystem.applyDB(driverStick.getX(Hand.kLeft));
+    Xe_r_RotPwr  = swerveDriveSubsystem.applyDB(driverStick.getX(Hand.kRight));
+    swerveDriveSubsystem.HolonomicDrv(Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    swerveDriveSubsystem.HolonomicDrv(0, 0, 0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return Math.abs(swds.calcDrvPosErr(d1)) < DISTANCE;
+    return (false);
   }
+
 }
