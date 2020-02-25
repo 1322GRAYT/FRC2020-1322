@@ -71,10 +71,10 @@ public class RobotContainer {
     // Primitive Autoaim Command
     new JoystickButton(auxStick, 1).whenPressed(new AutoAimCommand(aimSubsystem, visionSubsystem));
     // Ball Suck Command (Bumpers)
-    new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));
-    new JoystickButton(auxStick, 5).whenReleased(new BallSuckCommand(ballSubsystem, 0));
-    new JoystickButton(auxStick, 6).whenPressed(new BallSuckCommand(ballSubsystem, 1));
-    new JoystickButton(auxStick, 6).whenReleased(new BallSuckCommand(ballSubsystem, 0));
+    //new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));
+    //new JoystickButton(auxStick, 5).whenReleased(new BallSuckCommand(ballSubsystem, 0));
+    //new JoystickButton(auxStick, 6).whenPressed(new BallSuckCommand(ballSubsystem, 1));
+    //new JoystickButton(auxStick, 6).whenReleased(new BallSuckCommand(ballSubsystem, 0));
     // Manual Shoot
     new JoystickButton(auxStick, 3).whenPressed(new ManualShootCommand(ballSubsystem, turretSubsystem));
     // Color Wheel Commands (Start for Gain Pos Control, Select for Gain Rot Control)
