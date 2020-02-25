@@ -34,23 +34,16 @@ public class ManualIntakeLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double powerIntake = -auxStick.getY(Hand.kRight);
+    double powerIntake = auxStick.getY(Hand.kRight);
     if(powerIntake > .1 && !ballSubsystem.getBallSensorOuput()) {
-      //if(ballSubsystem.getCurrentIntakePosition() != IntakeLiftPosition.DOWN) ballSubsystem.raiseLowerIntake(IntakeLiftPosition.DOWN);
       ballSubsystem.runIntake(powerIntake);
     } else if (powerIntake < -.1) {
-      //if(ballSubsystem.getCurrentIntakePosition() != IntakeLiftPosition.DOWN) ballSubsystem.raiseLowerIntake(IntakeLiftPosition.DOWN);
       ballSubsystem.runIntake(powerIntake);
     } else {
-      //if(ballSubsystem.getCurrentIntakePosition() != IntakeLiftPosition.UP) ballSubsystem.raiseLowerIntake(IntakeLiftPosition.UP);
       ballSubsystem.runIntake(0);
     }
     double powerIntakeLift = auxStick.getTriggerAxis(Hand.kRight) - auxStick.getTriggerAxis(Hand.kLeft);
-    if(powerIntakeLift > .1) {
-      //if(ballSubsystem.getCurrentIntakePosition() != IntakeLiftPosition.UP) ballSubsystem.raiseLowerIntake(IntakeLiftPosition.UP);
-      ballSubsystem.runLift(powerIntakeLift);
-    } else if (powerIntakeLift < -.1) {
-      //if(ballSubsystem.getCurrentIntakePosition() != IntakeLiftPosition.DOWN) ballSubsystem.raiseLowerIntake(IntakeLiftPosition.DOWN);
+    if(Math.abs(powerIntakeLift) > .1) {
       ballSubsystem.runLift(powerIntakeLift);
     } else {
       ballSubsystem.runLift(0);
