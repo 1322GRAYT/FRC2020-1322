@@ -9,8 +9,11 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import frc.robot.calibrations.K_SWRV;
 import frc.robot.subsystems.SwerveDriveSubsystem;
+
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SDRV_DrvManual extends CommandBase {
   /**
@@ -35,16 +38,25 @@ public class SDRV_DrvManual extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    Xe_r_LongPwr = swerveDriveSubsystem.applyDB(-driverStick.getY(Hand.kLeft));
-    Xe_r_LatPwr  = swerveDriveSubsystem.applyDB(driverStick.getX(Hand.kLeft));
-    Xe_r_RotPwr  = swerveDriveSubsystem.applyDB(driverStick.getX(Hand.kRight));
+    Xe_r_LongPwr = -driverStick.getY(Hand.kLeft);
+    Xe_r_LatPwr  =  driverStick.getX(Hand.kLeft);
+    Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
+
+    SmartDashboard.putNumber("X-Box Power Long (N Pwr)  " ,  Xe_r_LongPwr);
+    SmartDashboard.putNumber("X-Box Power Lat  (N Pwr)  " ,  Xe_r_LatPwr);
+    SmartDashboard.putNumber("X-Box Power Rot  (N Pwr)  " ,  Xe_r_RotPwr);
+
+    Xe_r_LongPwr = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_LongPwr, K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+    Xe_r_LatPwr  = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_LatPwr,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+    Xe_r_RotPwr  = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_RotPwr,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+
     swerveDriveSubsystem.HolonomicDrv(Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    swerveDriveSubsystem.HolonomicDrv(0, 0, 0);
+    swerveDriveSubsystem.stopDrvMtrs();
   }
 
   // Returns true when the command should end.

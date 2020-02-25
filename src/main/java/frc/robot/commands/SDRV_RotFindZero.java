@@ -37,6 +37,7 @@ public class SDRV_RotFindZero extends CommandBase {
   int      Xe_i_ModIdx;
   TeCmndSt Xe_e_CmndSt;
   double   Xe_Deg_RotAngInit;
+  double   Xe_Deg_RotAngSwp;
   double   Xe_Deg_RotAngTgt;
   double   Xe_r_RotPwr;
   Timer    Xe_t_ZeroDtctTmr = new Timer();
@@ -53,8 +54,9 @@ public class SDRV_RotFindZero extends CommandBase {
   public void initialize() {
     Xe_e_CmndSt = TeCmndSt.Init; 
     Xe_Deg_RotAngInit = swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx);
-    Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + 45;
-    Xe_r_RotPwr = 0.10;
+    Xe_Deg_RotAngSwp = 270;
+    Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + Xe_Deg_RotAngSwp;
+    Xe_r_RotPwr = 0.15;
     Xe_t_ZeroDtctThrsh = 0.250;
     Xe_t_ZeroDtctTmr.reset();
   }
@@ -79,7 +81,8 @@ public class SDRV_RotFindZero extends CommandBase {
       }
       else{
         Xe_Deg_RotAngInit = swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx);
-        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + 10;
+        Xe_Deg_RotAngSwp = 10.0;
+        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + Xe_Deg_RotAngSwp;
         Xe_r_RotPwr = 0.05;
         Xe_e_CmndSt = TeCmndSt.SwpCW;
       }   
@@ -91,7 +94,7 @@ public class SDRV_RotFindZero extends CommandBase {
     else if (Xe_e_CmndSt == TeCmndSt.SwpCW) {
       if (swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx) >= Xe_Deg_RotAngTgt) {
         Xe_e_CmndSt = TeCmndSt.SwpCCW;
-        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit - 25;
+        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit - Xe_Deg_RotAngSwp;
         swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CCW, Xe_r_RotPwr);
       }
       else {
@@ -118,7 +121,6 @@ public class SDRV_RotFindZero extends CommandBase {
   public void end(boolean interrupted) {
     Xe_t_ZeroDtctTmr.stop();
     swerveDriveSystem.haltSwerveDrive();
-    swerveDriveSystem.resetCaddyRotEncdr(Xe_i_ModIdx);
     swerveDriveSystem.resetCaddyRotZeroOfst(Xe_i_ModIdx);
   }
 

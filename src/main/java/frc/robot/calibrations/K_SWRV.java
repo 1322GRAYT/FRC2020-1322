@@ -19,16 +19,22 @@ public class K_SWRV {
  	/**************************************************/	 	
 
 	  /** KeSWRV_b_DebugEnbl: Swerve Drive System Enable
-     *  Calibartion to send data to dashbord to debug..
+     *  Calibartion to send data to dashbord to debug.
      */
     public static final boolean KeSWRV_b_DebugEnbl = true;
 
     
-	  /** KeSWRV_b_DrvMtrRotDirctnInvertInhb: Swerve Drive System Enable
-     *  Calibartion to Inhibit Drive Motor Direction Inversion when 
+	  /** KeSWRV_b_DrvMtrRotDirctnInvertEnbl: Swerve Drive System Enable
+     *  Calibration to Enable Drive Motor Direction Inversion.
+     */
+    public static final boolean KeSWRV_b_DrvMtrRotDirctnInvertEnbl = false;
+
+	  /** KeSWRV_b_DrvMtrRotDirctnInvertInhbRot: Swerve Drive System Enable
+     *  Calibration to Inhibit Drive Motor Direction Inversion when 
      *  the Drive System is in Rotate Mode.
      */
-    public static final boolean KeSWRV_b_DrvMtrRotDirctnInvertInhb = false;
+    public static final boolean KeSWRV_b_DrvMtrRotDirctnInvertInhbRot = true;
+
 
 
   /**************************************************/
@@ -47,21 +53,31 @@ public class K_SWRV {
   /*  Swerve Drive Design Parameters                */
  	/**************************************************/	 	
 
-	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System Number of
+	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System: Number of
      * Rotation Control Motor Encoder Rotations to Swerve Module Rotations
      * Ratio.
      */
     public static final double KeSWRV_r_RotMtrEncdrToCaddyRat = 19.5;
 
-	  /** KeSWRV_l_ChassisWhlBase: Swerve Drive System Drive Chassis
-     * Effective WheelBase.
+	  /** KeSWRV_r_DrvMtrEncdrToWhlRatLo: Swerve Drive System: Number of
+     * Drive Control Motor Encoder Rotations to Swerve Wheel Rotations
+     * Ratio for Low Gear Ration.
      */
-    public static final double KeSWRV_l_ChassisWhlBase = 22.75;
+    public static final double KeSWRV_r_DrvMtrEncdrToWhlRatLo = 11.87016;
 
-	  /** KeSWRV_l_ChassisTrkWdth: Swerve Drive System Drive Chassis
-     * Effective TrackWidtch.
+
+	  /** KeSWRV_r_DrvMtrEncdrToWhlRatHi: Swerve Drive System: Number of
+     * Drive Control Motor Encoder Rotations to Swerve Wheel Rotations
+     * Ratio for High Gear Ratio.
      */
-    public static final double KeSWRV_l_ChassisTrkWdth = 22;
+    public static final double KeSWRV_r_DrvMtrEncdrToWhlRatHi = 8.166667;
+
+
+	  /** KeSWRV_l_DrvWhlDia: Swerve Drive System: Number of
+     * Drive Control Motor Encoder Rotations to Swerve Wheel Rotations
+     * Ratio.
+     */
+    public static final double KeSWRV_l_DrvWhlDia = 4.0;
 
 
 	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System - Conversion
@@ -70,44 +86,53 @@ public class K_SWRV {
      */
     public static final double KeSWRV_Cf_DrvMtrEncdrCntsToInch = 35.6;
 
-    
+
+	  /** KeSWRV_l_ChassisWhlBase: Swerve Drive System Drive Chassis
+     * Effective WheelBase.
+     */
+    public static final double KeSWRV_l_ChassisWhlBase = 26.34;
+
+	  /** KeSWRV_l_ChassisTrkWdth: Swerve Drive System Drive Chassis
+     * Effective TrackWidtch.
+     */
+    public static final double KeSWRV_l_ChassisTrkWdth = 17.25;
+
+
 
   /****************************************************/
   /*  Swerve Drive Rotation Control PID Coefficients  */
  	/****************************************************/	 	
     
-		// TODO: Tune! These are ripped directly off of REV's Example project
-
 	  /** KeSWRV_K_RotProp: Swerve Drive System Rotation Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_RotProp = 0.1;
+    public static final double KeSWRV_K_RotProp = 0.5;
 
 
 	  /** KeSWRV_K_RotPropIntgl: Swerve Drive System Rotation Control
      * Integral Control Gain. 
      */
-    public static final double KeSWRV_K_RotIntgl = 1e-4;
+    public static final double KeSWRV_K_RotIntgl = 0.0;
 
 
 	  /** KeSWRV_K_RotDeriv: Swerve Drive System Rotation Control
      * Derivative Control Gain. 
      */
-    public static final double KeSWRV_K_RotDeriv = 1;
+    public static final double KeSWRV_K_RotDeriv = 0.0;
 
 
 	  /** KeSWRV_K_RotFdFwd: Swerve Drive System Rotation Control
      * Feed Fowrward Control Gain. 
      */
-    public static final double KeSWRV_K_RotFdFwd = 0;
+    public static final double KeSWRV_K_RotFdFwd = 0.0;
 
 
-	  /** KeSWRV_e_RotIntglErrMaxEnbl: Swerve Drive System Rotation Control
+	  /** KeSWRV_r_RotIntglErrMaxEnbl: Swerve Drive System Rotation Control
      * Maximum Error Signal Threshold (absolute value) that Integral
      * correction will applied.  Error Signal must be within band 
-     * (+/- postive value). 
+     * (+/- postive value). (revs)
      */
-    public static final double KeSWRV_e_RotIntglErrMaxEnbl = 0;
+    public static final double KeSWRV_r_RotIntglErrMaxEnbl = 0.1;
 
 
 	  /** KeSWRV_r_RotNormOutMax: Swerve Drive System Rotation Control
@@ -132,33 +157,33 @@ public class K_SWRV {
 	  /** KeSWRV_K_DrvProp: Swerve Drive System Drive Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_DrvProp = 0.1;
+    public static final double KeSWRV_K_DrvProp = 0.5;
 
 
 	  /** KeSWRV_K_DrvPropIntgl: Swerve Drive System Drive Control
      * Integral Control Gain. 
      */
-    public static final double KeSWRV_K_DrvIntgl = 1e-4;
+    public static final double KeSWRV_K_DrvIntgl = 0.0;
 
 
 	  /** KeSWRV_K_DrvDeriv: Swerve Drive System Drv Control
      * Derivative Control Gain. 
      */
-    public static final double KeSWRV_K_DrvDeriv = 1;
+    public static final double KeSWRV_K_DrvDeriv = 0.0;
 
 
 	  /** KeSWRV_K_DrvFdFwd: Swerve Drive System Drive Control
      * Feed Fowrward Control Gain. 
      */
-    public static final double KeSWRV_K_DrvFdFwd = 0;
+    public static final double KeSWRV_K_DrvFdFwd = 0.0;
 
 
-	  /** KeSWRV_e_DrvIntglErrMaxEnbl: Swerve Drive System Drive Control
+	  /** KeSWRV_n_DrvIntglErrMaxEnbl: Swerve Drive System Drive Control
      * Maximum Error Signal Threshold (absolute value) that Integral
      * correction will applied.  Error Signal must be within band 
-     * (+/- postive value). 
+     * (+/- postive value). (rpm/100ms) 
      */
-    public static final int KeSWRV_e_DrvIntglErrMaxEnbl = 0;
+    public static final int KeSWRV_n_DrvIntglErrMaxEnbl = 0;
 
 
 	  /** KeSWRV_n_Drv_MM_CruiseVel: Swerve Drive System: This is the
@@ -216,14 +241,14 @@ public class K_SWRV {
      * Motor Driver Maximum Current Limit for Primary Driver,
      * Supply Current Limit.
      */
-    public static final double KeSWRV_I_DrvDrvrLmtMaxPri = 15;
+    public static final double KeSWRV_I_DrvDrvrLmtMaxPri = 40;
 
  
    /** KeSWRV_I_DrvDrvrLmtMaxSec: Swerve Drive System Drive Control
      * Motor Driver Maximum Current Limit for Secondary Driver,
      * Stator Current Limit. 
      */
-    public static final double KeSWRV_I_DrvDrvrLmtMaxSec = 15;
+    public static final double KeSWRV_I_DrvDrvrLmtMaxSec = 20;
 
 
    /** KeSWRV_t_DrvCAN_TmeOut: Swerve Drive System Rotation Control
