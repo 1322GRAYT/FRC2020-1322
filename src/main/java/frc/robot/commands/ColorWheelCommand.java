@@ -28,12 +28,15 @@ public class ColorWheelCommand extends InstantCommand {
   @Override
   public void initialize() {
     // Gain Position Control
-    if(cwce == ColorWheelCommandExecute.GAIN_POS_CONTROL){
+    if(cwce == ColorWheelCommandExecute.GAIN_BOTH_SAME_TIME){
       cws.cancelSpinnerIfRunning();
-      cws.gainPositionControl();
+      cws.gainRotationControl(true);
+    } else if(cwce == ColorWheelCommandExecute.GAIN_POS_CONTROL){
+      cws.cancelSpinnerIfRunning();
+      cws.gainPositionControl(false);
     } else { // Gain Rotation Control
       cws.cancelSpinnerIfRunning();
-      cws.gainRotationControl();
+      cws.gainRotationControl(false);
     }
   }
 }

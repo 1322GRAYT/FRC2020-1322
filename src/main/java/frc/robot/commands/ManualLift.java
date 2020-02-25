@@ -15,6 +15,7 @@ import frc.robot.subsystems.LiftSubsystem;
 public class ManualLift extends CommandBase {
   private LiftSubsystem liftSubsystem;
   private XboxController auxStick;
+  private double speed;
 
   /**
    * Creates a new ManualLift.
@@ -26,7 +27,7 @@ public class ManualLift extends CommandBase {
 
     this.auxStick = auxStick;
   }
-
+  
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
@@ -35,7 +36,8 @@ public class ManualLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double liftPower = (auxStick.getRawButton(1)?1:0) - (auxStick.getRawButton(2)?1:0);
+    // Right Trigger to go forward, Select button to go backwards
+    double liftPower = (auxStick.getRawAxis(3)) - (auxStick.getRawButton(7)?1:0);
     liftSubsystem.runLift(liftPower);
 
     int dPadPos = auxStick.getPOV();

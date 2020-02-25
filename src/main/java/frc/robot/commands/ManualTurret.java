@@ -12,18 +12,21 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.AimSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 
 public class ManualTurret extends CommandBase {
-  private AimSubsystem aimSubsystem;
+  private AimSubsystem ballTurret;
   private XboxController auxStick;
 
   /**
    * Creates a new TurretManualControl.
    */
-  public ManualTurret(AimSubsystem aimSubsystem, XboxController auxStick) {
+  public ManualTurret(AimSubsystem ballTurret, XboxController auxStick) {
+    // Use addRequirements() here to declare subsystem dependencies.
+
     this.auxStick = auxStick;
-    this.aimSubsystem = aimSubsystem;
-    addRequirements(this.aimSubsystem);
+    this.ballTurret = ballTurret;
+    addRequirements(this.ballTurret);
   }
 
   // Called when the command is initially scheduled.
@@ -34,9 +37,9 @@ public class ManualTurret extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    aimSubsystem.manualControl(-this.auxStick.getX(Hand.kLeft), this.auxStick.getY(Hand.kLeft));
-    SmartDashboard.putNumber("PanAngle", aimSubsystem.panEncoder());
-    SmartDashboard.putNumber("TiltAngle", aimSubsystem.tiltEncoder());
+    ballTurret.manualControl(-this.auxStick.getX(Hand.kLeft), this.auxStick.getY(Hand.kLeft));
+    SmartDashboard.putNumber("PanAngle", ballTurret.panEncoder());
+    SmartDashboard.putNumber("TiltAngle", ballTurret.tiltEncoder());
   }
 
   // Called once the command ends or is interrupted.
