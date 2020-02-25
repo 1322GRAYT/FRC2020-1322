@@ -19,15 +19,16 @@ public class AimSubsystem extends SubsystemBase {
   private TalonSRX pan, tilt;
 
   private int panEncTicks, tiltEncTicks;
+
+  int CruiseVelocity = 250; // Ticks per 100ms, for pan and tilt
+  int Acceleration = 30; // Ticks per 100ms per second, for pan and tilt
   /**
    * Creates a new AimSubsystem.
    */
   public AimSubsystem() {
+
     pan = new TalonSRX(Constants.SHOOTER_AIM_PAN);
     tilt = new TalonSRX(Constants.SHOOTER_AIM_TILT);
-    int CruiseVelocity = 250; // Ticks per 100ms, for pan and tilt
-    int Acceleration = 30; // Ticks per 100ms per second, for pan and tilt
-    
     double[] PanTiltkPIDF = {0.1, 0, 0, 4.5};
     
 
@@ -50,17 +51,17 @@ public class AimSubsystem extends SubsystemBase {
     tilt.configMotionAcceleration(Acceleration);
   }
 
-  public void pan(double speed) {
-    pan.set(ControlMode.PercentOutput, speed);
-  }
-
-  public void tilt(double speed) {
-    tilt.set(ControlMode.PercentOutput, speed);
-  }
-
   public void manualControl(double pan, double tilt){
-    this.pan(pan);
-    this.tilt(tilt);
+    this.pan.set(ControlMode.PercentOutput, pan);
+    this.tilt.set(ControlMode.PercentOutput, tilt);
+  }
+
+  public void pan(double power){
+    this.pan.set(ControlMode.PercentOutput, power);
+  }
+
+  public void tilt(double power){
+    this.tilt.set(ControlMode.PercentOutput, power);
   }
 
   public void panGoToAngle(double angle){
@@ -68,11 +69,11 @@ public class AimSubsystem extends SubsystemBase {
   }
 
   public double panEncoder(){
-    return PanTickToDegrees(this.panEncTicks);
+    return PanTickToDegrees(panEncTicks);
   }
 
   public double tiltEncoder(){
-    return TiltTickToDegrees(this.tiltEncTicks);
+    return TiltTickToDegrees(tiltEncTicks);
   }
 
   int PanDegreeToTick(double in){
