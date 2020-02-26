@@ -7,15 +7,10 @@
 
 package frc.robot.commands;
 
-import frc.robot.SwrvMap;
 import frc.robot.subsystems.SwerveDriveSubsystem;
-import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
 import frc.robot.subsystems.SwerveDriveSubsystem.TeRotDirctn;
 
-import javax.lang.model.util.ElementScanner6;
-
 import edu.wpi.first.wpilibj.Timer;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class SDRV_RotFindZero extends CommandBase {
@@ -23,7 +18,7 @@ public class SDRV_RotFindZero extends CommandBase {
    * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
    * Forward or Backwards at a specific Power Request. 
    */
-  SwerveDriveSubsystem swerveDriveSystem;
+  SwerveDriveSubsystem swerveDriveSubsystem;
 
 	public enum TeCmndSt {
     Init,
@@ -43,17 +38,17 @@ public class SDRV_RotFindZero extends CommandBase {
   Timer    Xe_t_ZeroDtctTmr = new Timer();
   double   Xe_t_ZeroDtctThrsh;
  
-  public SDRV_RotFindZero(SwerveDriveSubsystem swerveDriveSystem, int Xe_i_ModIdx) {
-    this.swerveDriveSystem = swerveDriveSystem;
+  public SDRV_RotFindZero(SwerveDriveSubsystem swerveDriveSubsystem, int Xe_i_ModIdx) {
+    this.swerveDriveSubsystem = swerveDriveSubsystem;
     this.Xe_i_ModIdx = Xe_i_ModIdx;
-    addRequirements(this.swerveDriveSystem);
+    addRequirements(this.swerveDriveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
     Xe_e_CmndSt = TeCmndSt.Init; 
-    Xe_Deg_RotAngInit = swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx);
+    Xe_Deg_RotAngInit = swerveDriveSubsystem.getSwerveCaddyAng(Xe_i_ModIdx);
     Xe_Deg_RotAngSwp = 270;
     Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + Xe_Deg_RotAngSwp;
     Xe_r_RotPwr = 0.15;
@@ -64,64 +59,94 @@ public class SDRV_RotFindZero extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    
-    if (swerveDriveSystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
-      Xe_e_CmndSt = TeCmndSt.ZeroDtct;
-      swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
-      Xe_t_ZeroDtctTmr.start();
-    }
-    else if (Xe_e_CmndSt == TeCmndSt.ZeroDtct) {
-      if (swerveDriveSystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
-        if(Xe_t_ZeroDtctTmr.get() >= Xe_t_ZeroDtctThrsh) {
-          Xe_e_CmndSt = TeCmndSt.ZeroCptr;          
+
+    /* **Init State** */
+    if (Xe_e_CmndSt == TeCmndSt.Init)  {
+        /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+        if (swerveDriveSubsystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
+          Xe_e_CmndSt = TeCmndSt.ZeroDtct;
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
+          Xe_t_ZeroDtctTmr.start();
         }
         else {
-          swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
+        System.out.println("Here Z");  
+        Xe_e_CmndSt = TeCmndSt.SwpCW;
+        swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
         }
-      }
-      else{
-        Xe_Deg_RotAngInit = swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx);
-        Xe_Deg_RotAngSwp = 10.0;
-        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + Xe_Deg_RotAngSwp;
-        Xe_r_RotPwr = 0.05;
-        Xe_e_CmndSt = TeCmndSt.SwpCW;
-      }   
-    }    
-    else if (Xe_e_CmndSt == TeCmndSt.Init)  {
-      Xe_e_CmndSt = TeCmndSt.SwpCW;
-      swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
     }
+    /* **Sweep CW State** */
     else if (Xe_e_CmndSt == TeCmndSt.SwpCW) {
-      if (swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx) >= Xe_Deg_RotAngTgt) {
-        Xe_e_CmndSt = TeCmndSt.SwpCCW;
-        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit - Xe_Deg_RotAngSwp;
-        swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CCW, Xe_r_RotPwr);
-      }
-      else {
-        swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
-      }    
+        /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+        if (swerveDriveSubsystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
+          Xe_e_CmndSt = TeCmndSt.ZeroDtct;
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
+          Xe_t_ZeroDtctTmr.start();
+        }
+        else if (swerveDriveSubsystem.getSwerveCaddyAng(Xe_i_ModIdx) >= Xe_Deg_RotAngTgt) {
+          Xe_e_CmndSt = TeCmndSt.SwpCCW;
+          Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit - Xe_Deg_RotAngSwp;
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CCW, Xe_r_RotPwr);
+        }
+        else {
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
+        }    
     }
+    /* **Sweep CCW State** */
     else if (Xe_e_CmndSt == TeCmndSt.SwpCCW) {
-      if (swerveDriveSystem.getSwerveCaddyAng(Xe_i_ModIdx) <= Xe_Deg_RotAngTgt) {
-        Xe_e_CmndSt = TeCmndSt.SwpCW;
-        Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit;
-        swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
-      }
-      else {
-        swerveDriveSystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CCW, Xe_r_RotPwr);
-      }    
+        /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+        if (swerveDriveSubsystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
+          Xe_e_CmndSt = TeCmndSt.ZeroDtct;
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
+          Xe_t_ZeroDtctTmr.start();
+        }
+        else if (swerveDriveSubsystem.getSwerveCaddyAng(Xe_i_ModIdx) <= Xe_Deg_RotAngTgt) {
+          Xe_e_CmndSt = TeCmndSt.SwpCW;
+          Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit;
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
+        }
+        else {
+          swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CCW, Xe_r_RotPwr);
+        }
     }
+    /* **Zero Detect State** */
+    else if (Xe_e_CmndSt == TeCmndSt.ZeroDtct) {
+        /* **Zero Position Sensor Still Detected - Goto Zero Detected State** */
+        if (swerveDriveSubsystem.getRotZeroDtctd(Xe_i_ModIdx) == false) {
+          if(Xe_t_ZeroDtctTmr.get() >= Xe_t_ZeroDtctThrsh) {
+            Xe_e_CmndSt = TeCmndSt.ZeroCptr;          
+          }
+          else {
+            swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, 0.0);
+          }
+        }
+        else{
+          /* **Zero Position Sensor No Longer Detected - Start Short Sweep Again Slower** */
+          Xe_Deg_RotAngInit = swerveDriveSubsystem.getSwerveCaddyAng(Xe_i_ModIdx);
+          Xe_Deg_RotAngSwp = 10.0;
+          Xe_Deg_RotAngTgt = Xe_Deg_RotAngInit + Xe_Deg_RotAngSwp;
+          Xe_r_RotPwr = 0.05;
+          Xe_e_CmndSt = TeCmndSt.SwpCW;
+        }   
+    }    
+    /* **Zero Captured State** */
     else if (Xe_e_CmndSt == TeCmndSt.ZeroCptr) {
       Xe_e_CmndSt = TeCmndSt.End;
-    }    
+    }
+    /* **Zero Captured State** */
+    else if (Xe_e_CmndSt == TeCmndSt.End) {
+      /* Do nothing - The End */
+    }
+
   }
+
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     Xe_t_ZeroDtctTmr.stop();
-    swerveDriveSystem.haltSwerveDrive();
-    swerveDriveSystem.resetCaddyRotZeroOfst(Xe_i_ModIdx);
+    swerveDriveSubsystem.haltSwerveDrive();
+    swerveDriveSubsystem.resetCaddyRotEncdr(Xe_i_ModIdx);
+    swerveDriveSubsystem.resetCaddyRotZeroOfst(Xe_i_ModIdx);
   }
 
   // Returns true when the command should end.

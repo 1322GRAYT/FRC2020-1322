@@ -151,15 +151,22 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	@Override
 	public void HolonomicDrv(double Le_r_PwrLong, double Le_r_PwrLat, double Le_r_PwrRat) {
         boolean Le_b_RotTqtUpdCond = false;
-		
-		VeSDRV_r_PwrLong = Le_r_PwrLong;
-		VeSDRV_r_PwrLat  = Le_r_PwrLat;
-		VeSDRV_r_PwrRot  = Le_r_PwrRat;
 
-        VeSDRV_b_SwrvRotRqstActv = Math.abs(Le_r_PwrRat) > .1;
+		if (Math.abs(Le_r_PwrRat) >= K_SWRV.KeSWRV_r_CntlrDeadBandThrsh) {
+			VeSDRV_b_SwrvRotRqstActv = true;		
+			VeSDRV_r_PwrLong = 0;
+			VeSDRV_r_PwrLat  = 0;
+			VeSDRV_r_PwrRot  = Le_r_PwrRat;
+		}
+		else {
+			VeSDRV_b_SwrvRotRqstActv = false;
+		    VeSDRV_r_PwrLong = Le_r_PwrLong;
+		    VeSDRV_r_PwrLat  = Le_r_PwrLat;
+			VeSDRV_r_PwrRot  = 0;
+		}
 
-		Le_r_PwrLong *= getSpdMult();
-		Le_r_PwrLat  *= getSpdMult();
+		VeSDRV_r_PwrLong *= getSpdMult();
+		VeSDRV_r_PwrLat  *= getSpdMult();
 		/*
 		if (isFieldOriented()) {
 			double angleRad = Math.toRadians(getGyroAngle());
@@ -201,7 +208,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	    }
 
 
-
 		VaSDRV_v_DrvSpdCalcRaw = new double[]{
 				Math.sqrt(b * b + c * c),
 				Math.sqrt(b * b + d * d),
@@ -227,6 +233,8 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 			} 
 			VaSDRV_Deg_RotAngActRaw[i] = SwrvDrvMod[i].getRotActAngRaw();
 			VaSDRV_Deg_RotAngAct[i] = SwrvDrvMod[i].cnvrtRotActAng(VaSDRV_Deg_RotAngActRaw[i]);
+
+		SmartDashboard.putString("Drv Mtr Dir Prev " + i , SwrvDrvMod[i].getDrvMtrDirctn().toString());
 		}
 
        dtrmnDrvMtrDirctn(SwrvMap.LtFt, SwrvMap.LtRr, VeSDRV_b_SwrvRotRqstActv);
@@ -566,21 +574,13 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
-	public void cntrlBrkInSwrvDrv(double Le_r_PwrRot, double Le_r_PwrDrv) {
-	/*	
-		this.drvFrontLeft.set(ControlMode.PercentOutput, fwdPower);
-		this.drvFrontRight.set(ControlMode.PercentOutput, fwdPower);
-	
-		rotRearLeft.set(rotPower);
-		rotFrontLeft.set(rotPower);
-		rotRearRight.set(rotPower);
-		rotFrontRight.set(rotPower);
-	*/
+	public void cntrlBrkInSwrvDrv(double Le_r_PwrRot, double Le_r_PwrDrv) {	
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+       	   SwrvDrvMod[i].setRotMtrPwr(Le_r_PwrRot);
+		}
+		SwrvDrvMod[SwrvMap.RtFt].setDrvMtrPwr(Le_r_PwrDrv);
+		SwrvDrvMod[SwrvMap.LtFt].setDrvMtrPwr(Le_r_PwrDrv);
 	}
-
-
-
-
 
 
 	public double calcDrvPosErr(double Le_l_DrvDistTgtInches) {

@@ -53,13 +53,64 @@ public class K_SWRV {
   /*  Swerve Drive Design Parameters                */
  	/**************************************************/	 	
 
+	  /** KeSWRV_l_ChassisWhlBase: Swerve Drive System Drive Chassis
+     * Effective WheelBase.
+     */
+    public static final double KeSWRV_l_ChassisWhlBase = 26.34;
+
+	  /** KeSWRV_l_ChassisTrkWdth: Swerve Drive System Drive Chassis
+     * Effective TrackWidtch.
+     */
+    public static final double KeSWRV_l_ChassisTrkWdth = 17.25;
+
+
+
+  /**************************************************/
+  /*  Swerve Rotation-System Mechanical Parameters  */
+ 	/**************************************************/	 	
+
+	  /** KeSWRV_Cf_RotMtrEncdrCntsPerRev: Swerve Drive System - Conversion
+     * Factor of the Number of Encoder Counts Per One Rotation of the
+     * Rotation Control Motor.
+     */
+    public static final double KeSWRV_Cf_RotMtrEncdrCntsPerRev = 42;
+
+
 	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System: Number of
      * Rotation Control Motor Encoder Rotations to Swerve Module Rotations
      * Ratio.
      */
     public static final double KeSWRV_r_RotMtrEncdrToCaddyRat = 19.5;
 
-	  /** KeSWRV_r_DrvMtrEncdrToWhlRatLo: Swerve Drive System: Number of
+
+
+
+
+  /*******************************************************/
+  /*  Swerve Drive-System Design Mechanical Parameters   */
+ 	/*******************************************************/	 	
+
+	  /** KeSWRV_Cf_DrvMtrEncdrCntsPerRev: Swerve Drive System - Conversion
+     * Factor of the Number of Encoder Counts Per One Rotation of the
+     * Drive Control Motor.
+     */
+    public static final double KeSWRV_Cf_DrvMtrEncdrCntsPerRev = 42;
+
+
+	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System - Conversion
+     * Factor of the Number of Drive Motor Encoder Counts of Rotation
+     * per 1 Linear inch of Drive Wheel travel.
+     */
+    public static final double KeSWRV_Cf_DrvMtrEncdrCntsToInch = 35.6;
+
+
+	  /** KeSWRV_l_DrvWhlDistPerRot: Swerve Drive System: Number of lineal
+     * distance travaled per one rotation of Swerve Drive Wheel Rotation
+     */
+    public static final double KeSWRV_l_DrvWhlDistPerRot = 4.0 * Math.PI;
+
+
+    /** KeSWRV_r_DrvMtrEncdrToWhlRatLo: Swerve Drive System: Number of
      * Drive Control Motor Encoder Rotations to Swerve Wheel Rotations
      * Ratio for Low Gear Ration.
      */
@@ -73,31 +124,6 @@ public class K_SWRV {
     public static final double KeSWRV_r_DrvMtrEncdrToWhlRatHi = 8.166667;
 
 
-	  /** KeSWRV_l_DrvWhlDia: Swerve Drive System: Number of
-     * Drive Control Motor Encoder Rotations to Swerve Wheel Rotations
-     * Ratio.
-     */
-    public static final double KeSWRV_l_DrvWhlDia = 4.0;
-
-
-	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System - Conversion
-     * Factor of the Number of Drive Motor Encoder Counts of Rotation
-     * per 1 Linear inch of Drive Wheel travel.
-     */
-    public static final double KeSWRV_Cf_DrvMtrEncdrCntsToInch = 35.6;
-
-
-	  /** KeSWRV_l_ChassisWhlBase: Swerve Drive System Drive Chassis
-     * Effective WheelBase.
-     */
-    public static final double KeSWRV_l_ChassisWhlBase = 26.34;
-
-	  /** KeSWRV_l_ChassisTrkWdth: Swerve Drive System Drive Chassis
-     * Effective TrackWidtch.
-     */
-    public static final double KeSWRV_l_ChassisTrkWdth = 17.25;
-
-
 
   /****************************************************/
   /*  Swerve Drive Rotation Control PID Coefficients  */
@@ -106,7 +132,7 @@ public class K_SWRV {
 	  /** KeSWRV_K_RotProp: Swerve Drive System Rotation Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_RotProp = 0.5;
+    public static final double KeSWRV_K_RotProp = 1.0;
 
 
 	  /** KeSWRV_K_RotPropIntgl: Swerve Drive System Rotation Control
@@ -151,13 +177,11 @@ public class K_SWRV {
   /**************************************************/
   /*  Swerve Drive Drive Control PID Coefficients   */
  	/**************************************************/	 	
-    
-		// TODO: Tune! These are ripped directly off of REV's Example project
 
 	  /** KeSWRV_K_DrvProp: Swerve Drive System Drive Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_DrvProp = 0.5;
+    public static final double KeSWRV_K_DrvProp = 1.0;
 
 
 	  /** KeSWRV_K_DrvPropIntgl: Swerve Drive System Drive Control

@@ -296,6 +296,8 @@ public class SwerveDriveModule extends SubsystemBase {
    */
   public void setDrvMtrPwr(final double Le_r_RotMtrPwr) {
     Ms_h_DrvMtr.set(ControlMode.PercentOutput, Le_r_RotMtrPwr);
+
+    SmartDashboard.putNumber("Spd Pwr Out " + Me_i_ModIdx , Le_r_RotMtrPwr);
   }
 
   public void resetDrvEncdrPstn() {

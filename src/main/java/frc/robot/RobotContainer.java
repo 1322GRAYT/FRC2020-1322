@@ -49,6 +49,11 @@ public class RobotContainer {
     setDefaultCommands();
   }
 
+  public SwerveDriveSubsystem gSwerveDriveSubsystem() {
+    return swerveDriveSystem;
+  }
+
+
   private void setDefaultCommands() {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(shooterSubsystem, new ManualTurret(shooterSubsystem, auxStick));
@@ -91,12 +96,13 @@ public class RobotContainer {
     new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_ROT_CONTROL));
 
     /* For Testing Only */
-    new JoystickButton(driverStick, 1).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtRr));
-    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtFt));
-    new JoystickButton(driverStick, 3).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtRr));
-    new JoystickButton(driverStick, 4).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtFt));
-    new JoystickButton(driverStick, 5).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.LtSd, 0.5));
-    new JoystickButton(driverStick, 6).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.RtSd, 0.5));
+    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
+//    new JoystickButton(driverStick, 1).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtRr));
+//    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtFt));
+//    new JoystickButton(driverStick, 3).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtRr));
+//    new JoystickButton(driverStick, 4).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtFt));
+//    new JoystickButton(driverStick, 5).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.LtSd, 0.5));
+//    new JoystickButton(driverStick, 6).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.RtSd, 0.5));
  
   }
 
