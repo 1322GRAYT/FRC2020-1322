@@ -9,9 +9,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
@@ -19,19 +17,16 @@ import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
+import frc.robot.Constants.ColorWheelColor;
+import frc.robot.Constants.SolenoidPosition;
 
-// Enum for Colors
-// .toString() returns the name, so RED.toString() returns "RED"
-enum ColorWheelColor { 
-    RED, GREEN, BLUE, YELLOW, UNKNOWN
-} 
+
 /**
  * NOTES ON THE COLOR WHEEL
  * 
@@ -64,12 +59,6 @@ public class ColorWheelSubsystem extends SubsystemBase {
   // Air Things
   private DoubleSolenoid wheelExtension;
 
-  // Boolean to enable/disable loops that control the spinner motor
-  private boolean runSpinnerAutonomously = false;
-
-  // Boolean to keep track if spinner is running autonomously
-  private boolean isSpinnerRunningAutonomously = false;
-
   // Boolean to track if we have the Game Data
   private boolean haveGameData = false;
 
@@ -78,6 +67,10 @@ public class ColorWheelSubsystem extends SubsystemBase {
 
   // Current Color of sensor (Read once once per loop)
   private ColorWheelColor currentSensorColor = ColorWheelColor.UNKNOWN;
+
+  // Threads
+  private Thread rotThread;
+  private Thread posThread;
   
   public ColorWheelSubsystem() {
     // Init Motor
@@ -92,26 +85,20 @@ public class ColorWheelSubsystem extends SubsystemBase {
     colorWheelMotor.setNeutralMode(NeutralMode.Brake);
   }
 
-  public void moveToColor(ColorWheelColor color) {
-    // Cancel Other loops, if running
-    runSpinnerAutonomously = false; 
-    // Set that we are auton controlling this motor here
-    runSpinnerAutonomously = true; 
-    // Start a new thread so we don't bog down the main thread
-    new Thread() {
-      public void run() {
-        // Start Spinning motor
-        colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-        // Wait Untill Desired Color is found
-        while(getFieldColorFromRobotColor(currentSensorColor) != color && runSpinnerAutonomously) { 
-          isSpinnerRunningAutonomously = true;
-        }
-        // While Loop Has exited, either because we finished or because it's been canceled. Stop the motor
-        colorWheelMotor.set(ControlMode.PercentOutput, 0);
-        // Set that we aren't running motor autoniomously
-        isSpinnerRunningAutonomously = false;
-      }
-    }.start();
+  public void setWheelSpeed(double speed) {
+    colorWheelMotor.set(ControlMode.PercentOutput, speed);
+  }
+
+  public int getProximity() {
+    return currentProx;
+  }
+
+  public ColorWheelColor getCurrentColorValue() {
+    return currentSensorColor;
+  }
+
+  public ColorWheelColor getGameDataColor() {
+    return gameDataColor;
   }
 
   /**
@@ -136,129 +123,11 @@ public class ColorWheelSubsystem extends SubsystemBase {
       }
   }
 
-    /**
-   * We can Gain position Control by rotating the color wheel to the field data
-   */
-  public void gainPositionControl(boolean alreadyInAThread) {
-    // If we dont have the game data or the game data is unknown, exit function.
-    if(!this.haveGameData || gameDataColor == ColorWheelColor.UNKNOWN) return;
-    if(alreadyInAThread) {
-      // If we're already in a thread, we don't need to launch a new one
-      int seenDesiredColor = 0;
-      colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED * .5);
-      // Wait for Color Sensor to return the right value
-      while(runSpinnerAutonomously && seenDesiredColor < 2) {
-        SmartDashboard.putNumber("PosCtrlDesColNum", seenDesiredColor);
-        if(getFieldColorFromRobotColor(currentSensorColor) == gameDataColor) {
-          seenDesiredColor++;
-        }
-        isSpinnerRunningAutonomously = true;
-      }
-      // Stop Spinning
-      colorWheelMotor.set(ControlMode.PercentOutput, 0);
-      // Update these
-      isSpinnerRunningAutonomously = false;
-      runSpinnerAutonomously = false;
-      // Retract Color Wheel Spinner that spins the wheel
-      setWheelExtension(Constants.SolenoidPosition.DOWN);
-    } else {
-      // Create a new thread
-      // Cancel Other Loops
-      this.runSpinnerAutonomously = false;
-      // Set that we're running now
-      this.runSpinnerAutonomously = true;
-      // Create a new thread so we don't bog down the main thread
-      new Thread() {
-        public void run() {
-          // Extend Color Wheel Wheel Spinner that spins the wheel
-          setWheelExtension(Constants.SolenoidPosition.UP);
-          // Start Spinning
-          colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-          // Wait for Color Sensor to return the right value
-          while(getFieldColorFromRobotColor(currentSensorColor) != gameDataColor && runSpinnerAutonomously) {
-            isSpinnerRunningAutonomously = true;
-          }
-          // Stop Spinning
-          colorWheelMotor.set(ControlMode.PercentOutput, 0);
-          // Update these
-          isSpinnerRunningAutonomously = false;
-          runSpinnerAutonomously = false;
-          // Retract Color Wheel Spinner that spins the wheel
-          setWheelExtension(Constants.SolenoidPosition.DOWN);
-        }
-      }.start();
-    }
-  }
-
-  /**
-   * We can Gain rotation Control by rotating the color wheel 3 times
-   */
-  public void gainRotationControl(boolean gainPosControlAfter) {
-    // Cancel Other Loops
-    this.runSpinnerAutonomously = false;
-    // Set that we're running now
-    this.runSpinnerAutonomously = true;
-    // Create a new thread so we don't bog down the main thread
-    new Thread() {
-      public void run() {
-        // Extend Color Wheel Spinner that spins the wheel
-        setWheelExtension(Constants.SolenoidPosition.UP);
-        // Start Spinning
-        colorWheelMotor.set(ControlMode.PercentOutput, Constants.COLOR_WHEEL_SPIN_SPEED);
-        // SmartDashboard Update
-        SmartDashboard.putString("StartColor", "Have Not Read Initial Color");
-        // Wait for Prox sensor To Detect Color Wheel
-        while(Math.abs(currentProx - Constants.IDEAL_PROX_COLOR_SENSOR) > Constants.PROX_SENSOR_TOLERANCE){}
-        // Get Start Color
-        ColorWheelColor startColor = currentSensorColor;
-        // SmartDashboard Update
-        SmartDashboard.putString("StartColor", currentSensorColor.toString());
-        
-        // Variables be used in the loop
-        ColorWheelColor lastColor = currentSensorColor;
-        int numberOfTimesSeenStartColor = 0;
-        while(runSpinnerAutonomously) {
-          isSpinnerRunningAutonomously = true;
-          if(lastColor != currentSensorColor) {
-            //New Color Detected
-            if(currentSensorColor == startColor) {
-              // We see the start color, lets add it
-              numberOfTimesSeenStartColor++;
-            }
-            // Update last color with the current color
-            lastColor = currentSensorColor;
-            // SmartDashboard Update
-            SmartDashboard.putNumber("NumSeenStartColor", numberOfTimesSeenStartColor);
-            // If we've seen the start color 6 times, we've rotated it 3 times. We can stop.
-            if(numberOfTimesSeenStartColor == 6) break; 
-          }
-        }
-        if(gainPosControlAfter) {
-          //colorWheelMotor.set(ControlMode.PercentOutput, 0);
-          //setWheelExtension(Constants.SolenoidPosition.DOWN);
-          //SmartDashboard.putString("ColorStoppedOn", currentSensorColor.toString());
-          gainPositionControl(true);
-        } else {
-          // Stop Spinning
-          colorWheelMotor.set(ControlMode.PercentOutput, 0);
-          // Retract Color Wheel Spinner that spins the wheel
-          setWheelExtension(Constants.SolenoidPosition.DOWN);
-          // Update these
-          isSpinnerRunningAutonomously = false;
-          runSpinnerAutonomously = false;
-        }
-      }
-    }.start();
-  }
-
   /**
    * Get The Currently Detect Color at the Sensor
    * @return ColorWheelColor Detected Color
    */
   private ColorWheelColor getCurrentColor() {
-    currentProx = m_colorSensor.getProximity();
-    SmartDashboard.putNumber("Prox", currentProx);
-    SmartDashboard.putBoolean("ProxCorrect?", Math.abs(currentProx - Constants.IDEAL_PROX_COLOR_SENSOR) < Constants.PROX_SENSOR_TOLERANCE);
     ColorMatchResult match = m_colorMatcher.matchClosestColor(m_colorSensor.getColor());
     if (match.color == Constants.kBlueTarget) {
       return ColorWheelColor.BLUE;
@@ -272,12 +141,13 @@ public class ColorWheelSubsystem extends SubsystemBase {
       return ColorWheelColor.UNKNOWN;
     }
   }
-
+  
   /**
-   * Cancels Any loops that may be trying to control the spinner
+   * Cancels Any loops that may be trying to control the spinner, stops wheel, and lowers
    */
-  public void cancelSpinnerIfRunning() {
-    runSpinnerAutonomously = false;
+  public void stopSpinnerAndLower() {
+    setWheelSpeed(0);
+    setWheelExtension(SolenoidPosition.DOWN);
   }
 
   /**
@@ -309,20 +179,6 @@ public class ColorWheelSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Blue", detectedColor.blue);
     SmartDashboard.putNumber("Confidence", match.confidence);
     SmartDashboard.putString("Detected Color", colorString);
-  }
-
-  /**
-   * @return If the spinner is being controled in a loop somewhere
-   */
-  public boolean getIsSpinnerRunningAutononously() {
-    return isSpinnerRunningAutonomously;
-  }
-
-  /**
-   * Stop the spinner, if it's running in a loop somewhere
-   */
-  public void stopSpinner() {
-    this.runSpinnerAutonomously = false;
   }
 
   /**
@@ -378,6 +234,11 @@ public class ColorWheelSubsystem extends SubsystemBase {
   
     //Call The Sensor ONCE per loop
     this.currentSensorColor = getCurrentColor();
+    
+    currentProx = m_colorSensor.getProximity();
+    SmartDashboard.putNumber("Prox", currentProx);
+    SmartDashboard.putBoolean("ProxCorrect?", Math.abs(currentProx - Constants.IDEAL_PROX_COLOR_SENSOR) < Constants.PROX_SENSOR_TOLERANCE);
+
     SmartDashboard.putString("Robot->FieldColor", getFieldColorFromRobotColor(currentSensorColor).toString());
     printColorToDashboardForCal();
   }

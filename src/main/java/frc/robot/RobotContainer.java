@@ -82,10 +82,11 @@ public class RobotContainer {
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
     auxStick = new XboxController(1);
     // Manual Shoot
-    new JoystickButton(auxStick, 3).whenPressed(new ManualShootCommand(ballSubsystem, turretSubsystem));
-    // Color Wheel Commands (Start for Gain Pos Control, Select for Gain Rot Control)
-    new JoystickButton(auxStick, 7).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_POS_CONTROL));
-    new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_BOTH_SAME_TIME));
+    new JoystickButton(auxStick, 3).whenPressed(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
+    // Color Wheel Commands (Start for Gain All control, Y to cancel)
+    new JoystickButton(auxStick, 8).whenPressed(new GainFullColorWheelCtrl(colorWheelSubsystem));
+    //new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_BOTH_SAME_TIME));
+    //new JoystickButton(auxStick, 4).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.STOP_ALL));
 
     // Ball Suck Command (Bumpers)
     //new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));

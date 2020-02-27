@@ -28,12 +28,17 @@ public final class Constants {
     }
     // Enum for Color Wheel Command
     public enum ColorWheelCommandExecute {
-        GAIN_POS_CONTROL, GAIN_ROT_CONTROL, GAIN_BOTH_SAME_TIME
+        GAIN_POS_CONTROL, GAIN_ROT_CONTROL, GAIN_BOTH_SAME_TIME, STOP_ALL
     }
     // Enum for Drive Shifter
     public enum DriveShiftPos {
         HIGH_GEAR, LOW_GEAR
     }
+    // Enum for Colors
+    // .toString() returns the name, so RED.toString() returns "RED"
+    public enum ColorWheelColor { 
+        RED, GREEN, BLUE, YELLOW, UNKNOWN
+    } 
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tenitive and are subject to change
     // Caddy Rotation Motors (SPARK MAX)

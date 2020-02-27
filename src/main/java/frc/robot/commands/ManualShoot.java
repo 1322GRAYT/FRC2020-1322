@@ -7,6 +7,7 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.BallSubsystem;
@@ -15,14 +16,16 @@ import frc.robot.subsystems.TurretSubsystem;
 public class ManualShoot extends CommandBase {
   BallSubsystem ballSubsystem;
   TurretSubsystem shooterSubsystem;
+  private XboxController auxStick;
 
   /**
    * Creates a new ManualShoot Command.
    */
-  public ManualShoot(BallSubsystem bs, TurretSubsystem ss) {
+  public ManualShoot(BallSubsystem bs, TurretSubsystem ss, XboxController auxStick) {
     addRequirements(bs, ss);
     ballSubsystem = bs;
     shooterSubsystem = ss;
+    this.auxStick = auxStick;
   }
 
   // Called when the command is initially scheduled.
@@ -47,7 +50,7 @@ public class ManualShoot extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return auxStick.getYButtonReleased();
   }
 
   // Called once the command ends or is interrupted.
