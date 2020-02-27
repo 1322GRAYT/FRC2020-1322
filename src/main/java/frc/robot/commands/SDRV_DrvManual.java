@@ -42,14 +42,6 @@ public class SDRV_DrvManual extends CommandBase {
     Xe_r_LatPwr  =  driverStick.getX(Hand.kLeft);
     Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
 
-    SmartDashboard.putNumber("X-Box Power Long (N Pwr)  " ,  Xe_r_LongPwr);
-    SmartDashboard.putNumber("X-Box Power Lat  (N Pwr)  " ,  Xe_r_LatPwr);
-    SmartDashboard.putNumber("X-Box Power Rot  (N Pwr)  " ,  Xe_r_RotPwr);
-
-    Xe_r_LongPwr = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_LongPwr, K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
-    Xe_r_LatPwr  = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_LatPwr,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
-    Xe_r_RotPwr  = swerveDriveSubsystem.applyDB_NormPwr(Xe_r_RotPwr,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
-
     swerveDriveSubsystem.HolonomicDrv(Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr);
   }
 

@@ -21,7 +21,7 @@ public class K_SWRV {
 	  /** KeSWRV_b_DebugEnbl: Swerve Drive System Enable
      *  Calibartion to send data to dashbord to debug.
      */
-    public static final boolean KeSWRV_b_DebugEnbl = true;
+    public static final boolean KeSWRV_b_DebugEnbl = false;
 
     
 	  /** KeSWRV_b_DrvMtrRotDirctnInvertEnbl: Swerve Drive System Enable

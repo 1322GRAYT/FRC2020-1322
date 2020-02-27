@@ -44,16 +44,20 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 
 	boolean VeSDRV_b_SwrvRotRqstActv;
-	
+
+	double[] VaSDRV_r_RotEncdrActRaw     = new double[SwrvMap.NumOfCaddies];
+	double[] VaSDRV_r_RotEncdrActCorr    = new double[SwrvMap.NumOfCaddies];	
 	double[] VaSDRV_Deg_RotAngActRaw     = new double[SwrvMap.NumOfCaddies];
-	double[] VaSDRV_Deg_RotAngAct        = new double[SwrvMap.NumOfCaddies];
+	double[] VaSDRV_Deg_RotAngActNorm    = new double[SwrvMap.NumOfCaddies];
+	double[] VaSDRV_Deg_RotAngActCnvrtd  = new double[SwrvMap.NumOfCaddies];
 
 	double[] VaSDRV_Deg_RotAngCalcRaw    = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_Deg_RotAngCalcCnvrtd = new double[SwrvMap.NumOfCaddies];
-	double[] VaSDRV_Deg_RotAngCalcCorr   = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_Deg_RotAngCalcLtch   = new double[SwrvMap.NumOfCaddies];
+
 	double[] VaSDRV_Deg_RotAngTgt        = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_r_RotEncdrTgt        = new double[SwrvMap.NumOfCaddies];      
+    double[] VaSDRV_r_RotEncdrTgtCorr    = new double[SwrvMap.NumOfCaddies];
 
 	double[] VaSDRV_v_DrvSpdCalcRaw      = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_v_DrvSpdCalcCnvrtd   = new double[SwrvMap.NumOfCaddies];
@@ -79,13 +83,17 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		SwrvDrvMod[SwrvMap.RtRr].getDrvMtr().follow(SwrvDrvMod[SwrvMap.RtFt].getDrvMtr());
 
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-			VaSDRV_Deg_RotAngActRaw[i] = 0;
-			VaSDRV_Deg_RotAngAct[i] = 0;
-			VaSDRV_Deg_RotAngCalcLtch[i] = 0;
-			VaSDRV_v_DrvSpdCalcRaw[i] = 0;
-			VaSDRV_v_DrvSpdCalcCnvrtd[i] = 0;
-			VaSDRV_Deg_RotAngTgt[i] = 0;
-			VaSDRV_r_RotEncdrTgt[i] = 0;
+		  VaSDRV_r_RotEncdrActRaw[i]    = 0;
+		  VaSDRV_r_RotEncdrActCorr[i]   = 0;
+		  VaSDRV_Deg_RotAngActRaw[i]    = 0;
+		  VaSDRV_Deg_RotAngActNorm[i]   = 0;
+		  VaSDRV_Deg_RotAngActCnvrtd[i] = 0;
+		  VaSDRV_Deg_RotAngCalcLtch[i]  = 0;
+		  VaSDRV_v_DrvSpdCalcRaw[i]     = 0;
+		  VaSDRV_v_DrvSpdCalcCnvrtd[i]  = 0;
+		  VaSDRV_Deg_RotAngTgt[i]       = 0;
+		  VaSDRV_r_RotEncdrTgt[i]       = 0;
+		  VaSDRV_r_RotEncdrTgtCorr[i]   = 0;
 		}
     
 		VeSDRV_v_DrvSpdMax  = 0.0;
@@ -149,19 +157,26 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 
 	@Override
-	public void HolonomicDrv(double Le_r_PwrLong, double Le_r_PwrLat, double Le_r_PwrRat) {
-        boolean Le_b_RotTqtUpdCond = false;
+	public void HolonomicDrv(double Le_r_PwrLong, double Le_r_PwrLat, double Le_r_PwrRot) {
+		boolean Le_b_RotAngUpdPwrCond;
 
-		if (Math.abs(Le_r_PwrRat) >= K_SWRV.KeSWRV_r_CntlrDeadBandThrsh) {
+        if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
+		  SmartDashboard.putNumber("X-Box Pwr Long " , Le_r_PwrLong);
+		  SmartDashboard.putNumber("X-Box Pwr Lat "  , Le_r_PwrLat);
+		  SmartDashboard.putNumber("X-Box Pwr Rot "  , Le_r_PwrRot);
+		}
+		
+		VeSDRV_r_PwrLong = applyDB_NormPwr(Le_r_PwrLong, K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+		VeSDRV_r_PwrLat  = applyDB_NormPwr(Le_r_PwrLat,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+		VeSDRV_r_PwrRot  = applyDB_NormPwr(Le_r_PwrRot,  K_SWRV.KeSWRV_r_CntlrDeadBandThrsh);
+
+		if (Math.abs(Le_r_PwrRot) > K_SWRV.KeSWRV_r_CntlrDeadBandThrsh) {
 			VeSDRV_b_SwrvRotRqstActv = true;		
 			VeSDRV_r_PwrLong = 0;
 			VeSDRV_r_PwrLat  = 0;
-			VeSDRV_r_PwrRot  = Le_r_PwrRat;
 		}
 		else {
 			VeSDRV_b_SwrvRotRqstActv = false;
-		    VeSDRV_r_PwrLong = Le_r_PwrLong;
-		    VeSDRV_r_PwrLat  = Le_r_PwrLat;
 			VeSDRV_r_PwrRot  = 0;
 		}
 
@@ -170,85 +185,107 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		/*
 		if (isFieldOriented()) {
 			double angleRad = Math.toRadians(getGyroAngle());
-			double temp = forward * Math.cos(angleRad) + strafe * Math.sin(angleRad); 
-			strafe = -forward * Math.sin(angleRad) + strafe * Math.cos(angleRad);
-			forward = temp;
+			double temp = VeSDRV_r_PwrLong * Math.cos(angleRad) + VeSDRV_r_PwrLat * Math.sin(angleRad); 
+			VeSDRV_r_PwrLat = -VeSDRV_r_PwrLong * Math.sin(angleRad) + VeSDRV_r_PwrLat * Math.cos(angleRad);
+			VeSDRV_r_PwrLong = temp;
 		}
 		*/
 
-		if (Math.abs(Le_r_PwrLong) > 0.05 || Math.abs(Le_r_PwrLat) > 0.05 || Math.abs(Le_r_PwrRat) > 0.05) {
-            Le_b_RotTqtUpdCond = true;
-		}
 
-		double a = Le_r_PwrLat  - Le_r_PwrRat * (K_SWRV.KeSWRV_l_ChassisWhlBase / K_SWRV.KeSWRV_l_ChassisTrkWdth);
-		double b = Le_r_PwrLat  + Le_r_PwrRat * (K_SWRV.KeSWRV_l_ChassisWhlBase / K_SWRV.KeSWRV_l_ChassisTrkWdth);
-		double c = Le_r_PwrLong - Le_r_PwrRat * (K_SWRV.KeSWRV_l_ChassisTrkWdth / K_SWRV.KeSWRV_l_ChassisWhlBase);
-		double d = Le_r_PwrLong + Le_r_PwrRat * (K_SWRV.KeSWRV_l_ChassisTrkWdth / K_SWRV.KeSWRV_l_ChassisWhlBase);
+        /* Process Swerve Drive Inverse Kinematics */
+
+		double a = VeSDRV_r_PwrLat  - VeSDRV_r_PwrRot * (K_SWRV.KeSWRV_l_ChassisWhlBase / K_SWRV.KeSWRV_l_ChassisTrkWdth);
+		double b = VeSDRV_r_PwrLat  + VeSDRV_r_PwrRot * (K_SWRV.KeSWRV_l_ChassisWhlBase / K_SWRV.KeSWRV_l_ChassisTrkWdth);
+		double c = VeSDRV_r_PwrLong - VeSDRV_r_PwrRot * (K_SWRV.KeSWRV_l_ChassisTrkWdth / K_SWRV.KeSWRV_l_ChassisWhlBase);
+		double d = VeSDRV_r_PwrLong + VeSDRV_r_PwrRot * (K_SWRV.KeSWRV_l_ChassisTrkWdth / K_SWRV.KeSWRV_l_ChassisWhlBase);
 
 		VaSDRV_Deg_RotAngCalcRaw =  new double[]{
-				Math.atan2(b, c) * 180 / Math.PI,
-				Math.atan2(b, d) * 180 / Math.PI,
-				Math.atan2(a, d) * 180 / Math.PI,
-				Math.atan2(a, c) * 180 / Math.PI
+		        Math.atan2(b, c) * 180 / Math.PI,
+			    Math.atan2(b, d) * 180 / Math.PI,
+			    Math.atan2(a, d) * 180 / Math.PI,
+			    Math.atan2(a, c) * 180 / Math.PI
 		};
 
-		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
-		    if (VaSDRV_Deg_RotAngCalcRaw[i] < 0.0 ) {
-			    /* Negative = Counter Clockwise (-0 to -180] Convert to Positive (360-180] */
-			    VaSDRV_Deg_RotAngCalcCnvrtd[i] = 360 + VaSDRV_Deg_RotAngCalcRaw[i];
-		    }
-		    else {
-			    VaSDRV_Deg_RotAngCalcCnvrtd[i] = VaSDRV_Deg_RotAngCalcRaw[i];
-		    }
-			VaSDRV_Deg_RotAngCalcCorr[i] = SwrvDrvMod[i].adjustRotTgtAng(VaSDRV_Deg_RotAngCalcCnvrtd[i]);
+		VaSDRV_v_DrvSpdCalcRaw = new double[]{
+			    Math.sqrt(b * b + c * c),
+			    Math.sqrt(b * b + d * d),
+			    Math.sqrt(a * a + d * d),
+			    Math.sqrt(a * a + c * c)
+		};
 
-			if (Le_b_RotTqtUpdCond == true) {
-				VaSDRV_Deg_RotAngCalcLtch[i] = VaSDRV_Deg_RotAngCalcCorr[i];
-			} 
+
+        /* Process Rotation Calculated Target Angle and Actual Angle */
+
+		if (Math.abs(VeSDRV_r_PwrLong) > K_SWRV.KeSWRV_r_CntlrDeadBandThrsh ||
+			Math.abs(VeSDRV_r_PwrLat)  > K_SWRV.KeSWRV_r_CntlrDeadBandThrsh ||
+			Math.abs(VeSDRV_r_PwrRot)  > K_SWRV.KeSWRV_r_CntlrDeadBandThrsh ) {
+		  Le_b_RotAngUpdPwrCond = true;
+		}
+		else {
+		  Le_b_RotAngUpdPwrCond = false;
+		}
+     
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
+		  /* Convert [-180 to 0 to 180] Angle where 0 was Forward to [0 to 180 to 360] Where 180 is Forward */
+		  VaSDRV_Deg_RotAngCalcCnvrtd[i] = VaSDRV_Deg_RotAngCalcRaw[i] + 180;			
+		  /* Update Latched Rotation Angle value if Input Power is High enough */
+		  if (Le_b_RotAngUpdPwrCond) {
+			VaSDRV_Deg_RotAngCalcLtch[i] = VaSDRV_Deg_RotAngCalcCnvrtd[i];
+		  } 
+		  /* Get Rotation AEncoder Position Raw */
+		  VaSDRV_r_RotEncdrActRaw[i] = SwrvDrvMod[i].getRotEncdrActPstn();
+		  /* Apply Rotation Encoder Position Zero Offset Correction to Raw Position */
+          VaSDRV_r_RotEncdrActCorr[i] = SwrvDrvMod[i].correctRotEncdrActPstn(VaSDRV_r_RotEncdrActRaw[i]); 
+		  /* Calculate Caddy Angle from Encoder Position (can include multiple revolutions) */         
+		  VaSDRV_Deg_RotAngActRaw[i] = SwrvDrvMod[i].getRotActAngRaw();
+		  /* Normalize the Actual Rotation Angle to a Single Rotation */
+		  VaSDRV_Deg_RotAngActNorm[i] = SwrvDrvMod[i].normRotActAng(VaSDRV_Deg_RotAngActRaw[i]);
+		  /* Convert [-180 to 0 to 180] Angle where 0 was Forward to [0 to 180 to 360] Where 180 is Forward */
+		  VaSDRV_Deg_RotAngActCnvrtd[i] = SwrvDrvMod[i].cnvrtRotActAng(VaSDRV_Deg_RotAngActNorm[i]);
 	    }
 
 
-		VaSDRV_v_DrvSpdCalcRaw = new double[]{
-				Math.sqrt(b * b + c * c),
-				Math.sqrt(b * b + d * d),
-				Math.sqrt(a * a + d * d),
-				Math.sqrt(a * a + c * c)
-		};
+        /* Process Drive Target Speed */
 
+		/* Peak Detection for values within VaSDRV_v_DrvSpdCalcRaw[x] for Drive Speed Normalization below */
 		VeSDRV_v_DrvSpdMax = 0.0;
-
-		// Limit VaSDRV_v_DrvSpdCalcRaw[x]
 		for (double LeSDRV_v_SpdTmp : VaSDRV_v_DrvSpdCalcRaw) { 
-			if (LeSDRV_v_SpdTmp > VeSDRV_v_DrvSpdMax) {
-				VeSDRV_v_DrvSpdMax = LeSDRV_v_SpdTmp;
-			}
+		  if (LeSDRV_v_SpdTmp > VeSDRV_v_DrvSpdMax) {
+			VeSDRV_v_DrvSpdMax = LeSDRV_v_SpdTmp;
+		  }
 		}
 
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
-			if (VeSDRV_v_DrvSpdMax > 1.0) {
-			  VaSDRV_v_DrvSpdCalcCnvrtd[i] = VaSDRV_v_DrvSpdCalcRaw[i]/VeSDRV_v_DrvSpdMax;
-			  }
-		    else {
-			  VaSDRV_v_DrvSpdCalcCnvrtd[i] = VaSDRV_v_DrvSpdCalcRaw[i];
-			} 
-			VaSDRV_Deg_RotAngActRaw[i] = SwrvDrvMod[i].getRotActAngRaw();
-			VaSDRV_Deg_RotAngAct[i] = SwrvDrvMod[i].cnvrtRotActAng(VaSDRV_Deg_RotAngActRaw[i]);
+		  if (VeSDRV_v_DrvSpdMax > 1.0) {
+			/* Normalize to 1 based on the Max Speed if the Max Speed exceeds 1.0 */
+		    VaSDRV_v_DrvSpdCalcCnvrtd[i] = VaSDRV_v_DrvSpdCalcRaw[i]/VeSDRV_v_DrvSpdMax;
+		  }
+		  else {
+		    VaSDRV_v_DrvSpdCalcCnvrtd[i] = VaSDRV_v_DrvSpdCalcRaw[i];
+		  } 
 
 		SmartDashboard.putString("Drv Mtr Dir Prev " + i , SwrvDrvMod[i].getDrvMtrDirctn().toString());
 		}
 
+
+       /* Determine if Drive Motor Direction Switch should be done. */
        dtrmnDrvMtrDirctn(SwrvMap.LtFt, SwrvMap.LtRr, VeSDRV_b_SwrvRotRqstActv);
        dtrmnDrvMtrDirctn(SwrvMap.RtFt, SwrvMap.RtRr, VeSDRV_b_SwrvRotRqstActv);
 
 
+       /* Calculate Rotation Angle Target and Command Target Rotation Positions */
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
-			VaSDRV_Deg_RotAngTgt[i] = SwrvDrvMod[i].adjustRotTgtAng(VaSDRV_Deg_RotAngCalcLtch[i]);
+			VaSDRV_Deg_RotAngTgt[i] = SwrvDrvMod[i].calcRotTgtAng(VaSDRV_Deg_RotAngCalcLtch[i]);
 			VaSDRV_r_RotEncdrTgt[i] = SwrvDrvMod[i].calcRotEncdrTgt(VaSDRV_Deg_RotAngTgt[i]);
+			VaSDRV_r_RotEncdrTgtCorr[i] = SwrvDrvMod[i].correctRotEncdrTgtPstn(VaSDRV_r_RotEncdrTgt[i]);
 			SwrvDrvMod[i].setRotEncdrTgt(VaSDRV_r_RotEncdrTgt[i]);
 		}
+
+		/* Command Target Drive Speeds */
 		setDrvMtrSpd(SwrvMap.RtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.RtFt]);
 		setDrvMtrSpd(SwrvMap.LtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.LtFt]);
 
+		/* Update SmartDashboard with Data */
         if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
 		    updateSmartDash();	
         }
@@ -267,46 +304,43 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	  * @param Le_b_SwrvRotRqstActv (boolean: swerve caddy rotation request active)
       */   
 	  private void dtrmnDrvMtrDirctn(int Le_i_ModIdxFt, int Le_i_ModIdxRr, boolean Le_b_SwrvRotRqstActv) {
-		double Le_Deg_RotAngTgtFt;
-		double Le_Deg_RotAngActFt;
-        double Le_Deg_RotErrAbsFt;      
+		double  Le_Deg_RotAngTgtFt;
+		double  Le_Deg_RotAngActFt;
+        double  Le_Deg_RotErrAbsFt;      
         boolean Le_b_DirctnFlipCondFt;
-        double Le_Deg_RotErrFtTemp;      
+        double  Le_Deg_RotErrMinAbsFt;      
 
-        double Le_Deg_RotAngTgtRr;
-        double Le_Deg_RotAngActRr;
-        double Le_Deg_RotErrAbsRr;      
+        double  Le_Deg_RotAngTgtRr;
+        double  Le_Deg_RotAngActRr;
+        double  Le_Deg_RotErrAbsRr;      
         boolean Le_b_DirctnFlipCondRr;
-        double Le_Deg_RotErrRrTemp;      
+        double  Le_Deg_RotErrMinAbsRr;      
 
         boolean Le_b_DirctnFlipCondComb;
         boolean Le_b_DirctnFlipTrig;
 
+		// Get Rotation Target Angle [0 - 360]
+		Le_Deg_RotAngTgtFt = (VaSDRV_Deg_RotAngCalcLtch[Le_i_ModIdxFt]); 
+		Le_Deg_RotAngTgtRr = (VaSDRV_Deg_RotAngCalcLtch[Le_i_ModIdxRr]);
+		// Correct for Reverse Drive Motor Direction if Necessary 
+		if (SwrvDrvMod[Le_i_ModIdxFt].getDrvMtrDirctn() == TeMtrDirctn.Rwd) {
+		  Le_Deg_RotAngTgtFt = (Le_Deg_RotAngTgtFt + 180) % 360;
+		}
+		if (SwrvDrvMod[Le_i_ModIdxRr].getDrvMtrDirctn() == TeMtrDirctn.Rwd) {
+          Le_Deg_RotAngTgtRr = (Le_Deg_RotAngTgtRr + 180) % 360; 
+		}
 
-        // Get Rotation Target Angle (0 - 360)
-        Le_Deg_RotAngTgtFt = VaSDRV_Deg_RotAngCalcLtch[Le_i_ModIdxFt]; 
-        Le_Deg_RotAngTgtRr = VaSDRV_Deg_RotAngCalcLtch[Le_i_ModIdxRr]; 
-        
-        // Get Rotation Current Angle (0-360)
-        Le_Deg_RotAngActFt = VaSDRV_Deg_RotAngAct[Le_i_ModIdxFt];
-        Le_Deg_RotAngActRr = VaSDRV_Deg_RotAngAct[Le_i_ModIdxRr];
+        // Get Rotation Current Angle [ 0-360 ]
+        Le_Deg_RotAngActFt = VaSDRV_Deg_RotAngActCnvrtd[Le_i_ModIdxFt];
+        Le_Deg_RotAngActRr = VaSDRV_Deg_RotAngActCnvrtd[Le_i_ModIdxRr];
 
 	    // Calc Rotation Angle Error Absolute Value (0-360)
         Le_Deg_RotErrAbsFt = Math.abs(Le_Deg_RotAngTgtFt - Le_Deg_RotAngActFt);
         Le_Deg_RotErrAbsRr = Math.abs(Le_Deg_RotAngTgtRr - Le_Deg_RotAngActRr);
 
-	    // Determine Flip COndition of Each Caddy Independently
+	    // Determine Flip Condition of Each Caddy Independently
 		Le_b_DirctnFlipCondFt = evalDirctnFlipCond(Le_Deg_RotErrAbsFt);
 		Le_b_DirctnFlipCondRr = evalDirctnFlipCond(Le_Deg_RotErrAbsRr);
-
-    	SmartDashboard.putNumber("Dir Tgt Ft (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotAngTgtFt);
-		SmartDashboard.putNumber("Dir Act Ft (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotAngActFt);
-    	SmartDashboard.putNumber("Dir Tgt Rr (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotAngTgtRr);
-		SmartDashboard.putNumber("Dir Act Rr (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotAngActRr);
-    	SmartDashboard.putNumber("Dir Ang Err Fr (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotErrAbsFt);
-		SmartDashboard.putNumber("Dir Ang Err Rr (Deg) " + Le_i_ModIdxFt,  Le_Deg_RotErrAbsRr);
-    	SmartDashboard.putBoolean("Dir Flip Cond Fr " + Le_i_ModIdxFt,  Le_b_DirctnFlipCondFt);
-		SmartDashboard.putBoolean("Dir Flip Cond Rr " + Le_i_ModIdxFt,  Le_b_DirctnFlipCondRr);
 
 		if ((Le_b_DirctnFlipCondFt == false) && (Le_b_DirctnFlipCondRr == false)) {
             Le_b_DirctnFlipCondComb = false;
@@ -315,61 +349,22 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
             Le_b_DirctnFlipCondComb = true;
 		}
 	    else {
-			 /* If Error is over 180 it is faster to rotate the other direction
-				So do the math to deterimine shortest distance based on rotating
-				either direction. */
+            /* Front Wheel Determine Shortest Distance to Target Rotating either Direction */
+			Le_Deg_RotErrMinAbsFt = calcDirctnDistMin(Le_Deg_RotErrAbsFt);
 
-			 /* Front Drive: Convert [180-360) Error to [-180 to -0} error */
-			 if (Le_Deg_RotErrAbsFt >= 180) {
-				Le_Deg_RotErrFtTemp = Le_Deg_RotErrAbsFt - 360;
-			 }
-			 else {
-				Le_Deg_RotErrFtTemp = Le_Deg_RotErrAbsFt;
-			 }
-			 /* Front Drive: Get Absolute Value of Delta to Target */
-			 Le_Deg_RotErrFtTemp = Math.abs(Le_Deg_RotErrFtTemp);
-
-
-			 /* Rear Drive: Convert [180-360) Error to [-180 to -0} error */
-			 if (Le_Deg_RotErrAbsRr >= 180) {
-				Le_Deg_RotErrRrTemp = Le_Deg_RotErrAbsRr - 360;
-			 }
-			 else {
-				Le_Deg_RotErrRrTemp = Le_Deg_RotErrAbsRr;
-			 }
-			 /* Rear Drive: Get Absolute Value of Delta to Target */
-			 Le_Deg_RotErrRrTemp = Math.abs(Le_Deg_RotErrRrTemp);
+            /* Front Wheel Determine Shortest Distance to Target Rotating either Direction */
+			Le_Deg_RotErrMinAbsRr = calcDirctnDistMin(Le_Deg_RotErrAbsRr);
 			 
-			 /* Flip Conditions Met: Front but not Back */
-			 if (Le_b_DirctnFlipCondFt == true) {
-			 /* If the conditions determined to flip Front Drive
-				but not Back Drive: Only flip directions if the 
-				delta the front drive had prior to inverting
-				direction is greatuer than the delta that the rear
-				drive will have to rotate after invertind direction. */
-				Le_Deg_RotErrRrTemp = Math.abs(Le_Deg_RotErrRrTemp - 180);
-				if (Le_Deg_RotErrFtTemp > Le_Deg_RotErrRrTemp)
-					Le_b_DirctnFlipCondComb = true;
-				else
-				    Le_b_DirctnFlipCondComb = false; 
-			 }
-			 /* Flip Conditions Met: Back but not Front */
-		     else /* (Le_b_DirctnFlipCondRr == true)	*/ {
-				/* If the conditions determined to flip Back Drive
-				   but not flip Front Drive: Only flip directions if
-				   the delta the back drive had prior to inverting
-				   direction is greatuer than the delta that the front
-				   drive will have to rotate after invertind direction. */
-				Le_Deg_RotErrFtTemp = Math.abs(Le_Deg_RotErrFtTemp - 180);
-				if (Le_Deg_RotErrRrTemp > Le_Deg_RotErrFtTemp)
-					Le_b_DirctnFlipCondComb = true;
-				else
-				    Le_b_DirctnFlipCondComb = false; 				
-			 }	
+			/* Flip Conditions Met: Front but not Back */
+			if (Le_b_DirctnFlipCondFt == true) {
+			  Le_b_DirctnFlipCondComb = evalDirctnFlipCondCmplx(Le_Deg_RotErrMinAbsFt, Le_Deg_RotErrMinAbsRr);  
+			}
+			/* Flip Conditions Met: Back but not Front */
+		    else /* (Le_b_DirctnFlipCondRr == true)	*/ {
+			  Le_b_DirctnFlipCondComb = evalDirctnFlipCondCmplx(Le_Deg_RotErrMinAbsRr, Le_Deg_RotErrMinAbsFt);  
+			}	
 		}
 		
-    	SmartDashboard.putBoolean("Dir Flip Cond Comb " + Le_i_ModIdxFt,  Le_b_DirctnFlipCondComb);
-
 		if ((K_SWRV.KeSWRV_b_DrvMtrRotDirctnInvertEnbl == false) ||
 			(SwrvDrvMod[Le_i_ModIdxFt].getDrvMtrDirctnUpdInhb() == true) ||
 		    (SwrvDrvMod[Le_i_ModIdxRr].getDrvMtrDirctnUpdInhb() == true) ||
@@ -377,7 +372,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
             Le_b_DirctnFlipTrig = false;
         }
         else {
-            Le_b_DirctnFlipTrig = Le_b_DirctnFlipCondComb;
+        Le_b_DirctnFlipTrig = Le_b_DirctnFlipCondComb;
         }
 
 
@@ -410,7 +405,55 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	  }
 
 
+	/** Method: calcDirctnMinDist - Swerve Drive System: If Error is 
+	 * over 180, it is faster to rotate around the other direction, 
+	 * so do the math to deterimine shortest distance based on 
+	 * rotating either direction and use the smallest error.
+	 * @param Le_Deg_RotErrAbs      (double:  swerve module caddy rotation angle error)
+	 * @return Le_Deg_RotErrAbsMin  (boolean: swerve caddy rotation angle error min)
+     */   
+	  private double calcDirctnDistMin(double Le_Deg_RotErrAbs) {
+		double Le_Deg_RotErrMin, Le_Deg_RotErrMinAbs;
 
+			 /* Convert [180-360) Error to [-180 to -0) Error */
+			 if (Le_Deg_RotErrAbs >= 180) {
+				Le_Deg_RotErrMin = Le_Deg_RotErrAbs - 360;
+			 }
+			 else {
+				Le_Deg_RotErrMin = Le_Deg_RotErrAbs;
+			 }
+			 /* Get Absolute Value of Delta to Target */
+			 Le_Deg_RotErrMinAbs = Math.abs(Le_Deg_RotErrMin);
+
+		return (Le_Deg_RotErrMinAbs);
+	  }
+
+
+	/** Method: evalDirctnFlipCondCmplx - Swerve Drive System: If the conditions
+	 * determined to flip one Drive but not flip the other Drive: Only flip
+	 * directions, if the delta the active wheel (wheel that meets the flip
+	 * conditions) has prior to inverting direction is greatuer than the
+	 * delta that the passive wheel will have to rotate after inverting
+	 * directions, otherwise don't flip.
+	 * @param  Le_Deg_ActvWhlErrAbs  (double:  swerve module Flip Active Wheel Angle Error Absolute )
+	 * @param  Le_Deg_PsvWhlErrAbs   (double:  swerve module Flip Passive Wheel Angle Error Absolute)
+	 * @return Le_b_CmplxDrvWhlFlipCondMet  (boolean: Drive Wheel Flip Condition Met Indicator)
+     */   
+	private boolean evalDirctnFlipCondCmplx(double Le_Deg_ActvWhlErrAbs, double Le_Deg_PsvWhlErrAbs) {
+	  double  Le_Deg_PsvWhlErrAbsFlipped;
+	  boolean Le_b_CmplxDrvWhlFlipCondMet;
+
+	  Le_Deg_PsvWhlErrAbsFlipped = (Le_Deg_PsvWhlErrAbs + 180);
+	  if (Le_Deg_PsvWhlErrAbsFlipped > 180) {
+	    Le_Deg_PsvWhlErrAbsFlipped = 180 - Le_Deg_PsvWhlErrAbsFlipped;
+	  }
+	  if (Le_Deg_ActvWhlErrAbs > Le_Deg_PsvWhlErrAbsFlipped)
+	    Le_b_CmplxDrvWhlFlipCondMet = true;
+	  else
+	    Le_b_CmplxDrvWhlFlipCondMet = false;
+	  
+	  return (Le_b_CmplxDrvWhlFlipCondMet);
+	}
 
 
     /*****************************************************/
@@ -622,19 +665,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
-    public void resetCaddyRotZeroOfst(int Le_i_SwrvModIdx) {
-        SwrvDrvMod[Le_i_SwrvModIdx].resetRotAngZeroOfst();
-    }
-
-
-    public void resetSwrvDrvRotZeroOfst() {
-		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)
-            SwrvDrvMod[i].resetRotAngZeroOfst();
-    }
-
-
-
-
 
 
     /*************************************************/
@@ -690,25 +720,33 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	SmartDashboard.putNumber("Cntrlr Pwr Rot " ,  VeSDRV_r_PwrRot);
 
 	for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-	  
-	   SmartDashboard.putNumber("Tgt Ang Raw " + i ,       VaSDRV_Deg_RotAngCalcRaw[i]);
-	   SmartDashboard.putNumber("Tgt Ang Corr " + i ,      VaSDRV_Deg_RotAngCalcLtch[i]);
-	   SmartDashboard.putNumber("Tgt Encdr Revs " + i ,    VaSDRV_r_RotEncdrTgt[i]);
-       SmartDashboard.putNumber("Act Encdr Revs " + i ,    SwrvDrvMod[i].getRotEncdrActPstn());	   
-       SmartDashboard.putNumber("Act Ang Raw " + i ,       VaSDRV_Deg_RotAngActRaw[i]);
-       SmartDashboard.putNumber("Act Ang Corr " + i ,      VaSDRV_Deg_RotAngAct[i]);
+		
+	   SmartDashboard.putNumber("Calc Ang Raw " + i ,      VaSDRV_Deg_RotAngCalcRaw[i]);
+	   SmartDashboard.putNumber("Calc Ang Cnvrtd " + i ,   VaSDRV_Deg_RotAngCalcCnvrtd[i]);
+	   SmartDashboard.putNumber("Calc Ang Ltch " + i ,     VaSDRV_Deg_RotAngCalcLtch[i]);
+
+       SmartDashboard.putNumber("Tgt Ang Raw " + i ,       VaSDRV_Deg_RotAngTgt[i]);	   
+	   SmartDashboard.putNumber("Tgt Encdr Raw " + i ,     VaSDRV_r_RotEncdrTgt[i]);
+	   SmartDashboard.putNumber("Tgt Encdr Corr " + i ,    VaSDRV_r_RotEncdrTgtCorr[i]);
+
+	   SmartDashboard.putNumber("Act Encdr Raw " + i ,     VaSDRV_r_RotEncdrActRaw[i]);
+	   SmartDashboard.putNumber("Act Encdr Corr " + i ,    VaSDRV_r_RotEncdrActCorr[i]); 
+	   SmartDashboard.putNumber("Act Ang Raw " + i ,       VaSDRV_Deg_RotAngActRaw[i]);
+	   SmartDashboard.putNumber("Act Ang Norm " + i ,      VaSDRV_Deg_RotAngActNorm[i]);
+	   SmartDashboard.putNumber("Act Ang Cnvrtd " + i ,    VaSDRV_Deg_RotAngActCnvrtd[i]);
+
+       SmartDashboard.putNumber("Rot Zero Ofst " + i ,     SwrvDrvMod[i].getRotEncdrZeroOfst());
+       SmartDashboard.putNumber("Rot Mtr Cur " + i ,       SwrvDrvMod[i].getRotMtrCurr());
+	
 	   SmartDashboard.putNumber("Tgt Spd Raw " + i ,       VaSDRV_v_DrvSpdCalcRaw[i]);
 	   SmartDashboard.putNumber("Tgt Spd Cnvrtd " + i ,    VaSDRV_v_DrvSpdCalcCnvrtd[i]);
        SmartDashboard.putNumber("Drv Encdr Cnts " + i ,    SwrvDrvMod[i].getDrvEncdrDelt());	   
 	   SmartDashboard.putString("Drv Mtr Dir " + i ,       SwrvDrvMod[i].getDrvMtrDirctn().toString());
 	   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
-       SmartDashboard.putNumber("Rot Zero Ofst " + i ,     SwrvDrvMod[i].getRotAngZeroOfst());
-       SmartDashboard.putNumber("Rot Mtr Cur " + i ,       SwrvDrvMod[i].getRotMtrCurr());
 	   
 	   }
 
 	}
-
 
 }
 

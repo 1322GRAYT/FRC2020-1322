@@ -13,8 +13,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class SDRV_RotRstZero extends CommandBase {
   /**
-   * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
-   * Forward or Backwards at a specific Power Request. 
+   * Command: SDRV_RotRstZero  
    */
   private SwerveDriveSubsystem swerveDriveSubsystem;
     int Le_Cnt_Dly;
@@ -28,15 +27,14 @@ public class SDRV_RotRstZero extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    swerveDriveSubsystem.resetSwrvDrvRotZeroOfst();
+    swerveDriveSubsystem.resetRotEncdrs();
     Le_Cnt_Dly = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-  Le_Cnt_Dly += 1;
-  System.out.println("Here I");  
+  Le_Cnt_Dly += 1; 
   }
 
   // Called once the command ends or is interrupted.

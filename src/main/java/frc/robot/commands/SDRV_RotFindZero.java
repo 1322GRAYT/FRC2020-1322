@@ -69,7 +69,6 @@ public class SDRV_RotFindZero extends CommandBase {
           Xe_t_ZeroDtctTmr.start();
         }
         else {
-        System.out.println("Here Z");  
         Xe_e_CmndSt = TeCmndSt.SwpCW;
         swerveDriveSubsystem.sweepSwerveCaddyToAng(Xe_i_ModIdx, TeRotDirctn.CW, Xe_r_RotPwr);
         }
@@ -130,6 +129,7 @@ public class SDRV_RotFindZero extends CommandBase {
     }    
     /* **Zero Captured State** */
     else if (Xe_e_CmndSt == TeCmndSt.ZeroCptr) {
+      swerveDriveSubsystem.resetCaddyRotEncdr(Xe_i_ModIdx);
       Xe_e_CmndSt = TeCmndSt.End;
     }
     /* **Zero Captured State** */
@@ -145,8 +145,6 @@ public class SDRV_RotFindZero extends CommandBase {
   public void end(boolean interrupted) {
     Xe_t_ZeroDtctTmr.stop();
     swerveDriveSubsystem.haltSwerveDrive();
-    swerveDriveSubsystem.resetCaddyRotEncdr(Xe_i_ModIdx);
-    swerveDriveSubsystem.resetCaddyRotZeroOfst(Xe_i_ModIdx);
   }
 
   // Returns true when the command should end.
