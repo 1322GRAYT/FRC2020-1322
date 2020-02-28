@@ -32,7 +32,7 @@ public class ShiftSubsystem extends SubsystemBase {
   }
 
 
-  public DriveShiftPos getSelectedGearRatio() {
+  public DriveShiftPos getSelectedGearRatio(ShiftSubsystem shiftSubsystem) {
     return (selectedGearRatio);
   }
 

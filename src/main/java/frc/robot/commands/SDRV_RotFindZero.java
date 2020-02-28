@@ -19,7 +19,7 @@ public class SDRV_RotFindZero extends CommandBase {
   SwerveDriveSubsystem swerveDriveSubsystem;
  
   public SDRV_RotFindZero(SwerveDriveSubsystem swerveDriveSubsystem) {
-
+    this.swerveDriveSubsystem = swerveDriveSubsystem;
     addRequirements(swerveDriveSubsystem);
   }
 

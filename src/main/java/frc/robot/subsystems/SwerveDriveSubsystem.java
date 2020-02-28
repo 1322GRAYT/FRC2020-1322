@@ -150,7 +150,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	@Override
 	public void periodic() {
 	  // This method will be called once per scheduler run
-	  
 	}
 
 
@@ -665,7 +664,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	public void driveRotateToAng(TeRotDirctn Le_e_RotDirctn, double Le_Deg_RotTgt, double Le_r_PwrLvl) {
 		double Le_Deg_RotErr = ((Le_Deg_RotTgt - mNavX.getYaw()) / 180)*10;
 		Le_Deg_RotErr = Math.min(Le_Deg_RotErr, 1);
-
 		Le_Deg_RotErr = Math.max(Le_Deg_RotErr, -1);
 		if (Math.abs(Le_Deg_RotErr) < 5 )
 		  Le_r_PwrLvl *= 0.25;
@@ -683,11 +681,11 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 
 
-
+/*
 	public double calcDrvPosErr(double Le_l_DrvDistTgtInches) {
 		return Le_l_DrvDistTgtInches - SwrvDrvMod[SwrvMap.RtFt].getDrvDist();
 	}
-
+*/
 
 	public void cmndDrvsToEncdrPos(double Le_r_EncdrPos) {
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {

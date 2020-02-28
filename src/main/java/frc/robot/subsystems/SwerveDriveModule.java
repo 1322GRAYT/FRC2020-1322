@@ -563,7 +563,7 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
     return ((double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn);
   }
 
-
+/*
   public double getDrvInchesPerEncdrCnts(double Le_Cnts_DrvEncdrCnts) {
     double Le_r_DrvGearRat;
     double Le_r_WhlRevs;
@@ -581,8 +581,9 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
 
     return (Le_l_DrvWhlDistInches);
   }
+*/
 
-
+/*
   public int getDrvEncdrCntsPerInches(double Le_l_DrvWhlDistInches) {
     double Le_r_DrvGearRat;
     double Le_r_WhlRevs;
@@ -600,14 +601,15 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
   
     return ((int) Math.round(Le_Cnts_DrvEncdr));
   }
+*/
 
-
+/*
   public double getDrvDistTravelled() { 
     double Le_Cnts_DrvEncdrCntDelt;  
     Le_Cnts_DrvEncdrCntDelt = (double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn;
     return (getDrvInchesPerEncdrCnts(Le_Cnts_DrvEncdrCntDelt));
   }
-
+*/
 
 
   /********************************************************/
