@@ -25,11 +25,6 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ColorWheelSubsystem colorWheelSubsystem = new ColorWheelSubsystem();
-  private final VisionSubsystem visionSubsystem = new VisionSubsystem();
-  private final TurretSubsystem shooterSubsystem = new TurretSubsystem();
-  private final BallSubsystem ballSubsystem = new BallSubsystem();
-  private final LiftSubsystem liftSubsystem = new LiftSubsystem();
   private final SwerveDriveSubsystem swerveDriveSystem = new SwerveDriveSubsystem();	
   
   private XboxController driverStick;
@@ -55,9 +50,6 @@ public class RobotContainer {
 
 
   private void setDefaultCommands() {
-    CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, auxStick));
-    CommandScheduler.getInstance().setDefaultCommand(shooterSubsystem, new ManualTurret(shooterSubsystem, auxStick));
-    CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_DrvManual(swerveDriveSystem, driverStick)); }
 
 
@@ -82,18 +74,6 @@ public class RobotContainer {
   private void configureButtonBindings() {
     driverStick = new XboxController(0);
     auxStick = new XboxController(1);
-    // Primitive Autoaim Command
-    new JoystickButton(auxStick, 1).whenPressed(new AutoAimCommand(shooterSubsystem, visionSubsystem));
-    // Ball Suck Command (Bumpers)
-    new JoystickButton(auxStick, 5).whenPressed(new BallSuckCommand(ballSubsystem, -1));
-    new JoystickButton(auxStick, 5).whenReleased(new BallSuckCommand(ballSubsystem, 0));
-    new JoystickButton(auxStick, 6).whenPressed(new BallSuckCommand(ballSubsystem, 1));
-    new JoystickButton(auxStick, 6).whenReleased(new BallSuckCommand(ballSubsystem, 0));
-    // Manual Shoot
-    new JoystickButton(auxStick, 3).whenPressed(new ManualShootCommand(ballSubsystem, shooterSubsystem));
-    // Color Wheel Commands (Start for Gain Pos Control, Select for Gain Rot Control)
-    new JoystickButton(auxStick, 7).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_POS_CONTROL));
-    new JoystickButton(auxStick, 8).whenPressed(new ColorWheelCommand(colorWheelSubsystem, ColorWheelCommandExecute.GAIN_ROT_CONTROL));
 
     /* For Testing Only */
     new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
