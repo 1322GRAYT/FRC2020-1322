@@ -282,4 +282,17 @@ public class K_SWRV {
 
 
 
+
+  /********************************************/
+  /*  Rotation Zero Offset Learn Algorithm    */
+ 	/********************************************/	 	
+
+    public static final double KeSWRV_Deg_RZL_AngSwpCourse = 90;
+    public static final double KeSWRV_Deg_RZL_AngSwpFine = 10;
+    public static final double KeSWRV_r_RZL_PwrSwpCourse = 0.15;
+    public static final double KeSWRV_r_RZL_PwrSwpFine = 0.05;
+    public static final double KeSWRV_t_RZL_ZeroDtctThrsh = 0.250;
+
+
+
 }

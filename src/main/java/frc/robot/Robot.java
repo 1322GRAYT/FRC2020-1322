@@ -62,8 +62,9 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     if (SwrvRotZeroNotRun == true) {
-      //new SDRV_RotInitRobot(swerveDriveSubsystem).schedule();
+      new SDRV_RotInitRobot_CG(swerveDriveSubsystem).schedule();
       SwrvRotZeroNotRun = false;
+      swerveDriveSubsystem.mngSDRV_RZL_SchedTask(); 
     }
 
   }

@@ -13,6 +13,8 @@ import com.revrobotics.CANSparkMax.InputMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -22,42 +24,78 @@ import frc.robot.calibrations.K_SWRV;
 public class SwerveDriveModule extends SubsystemBase {
 
   public enum TeMtrDirctn {
-        Fwd,
-        Rwd;
+      Fwd,
+      Rwd;
    }
+
+  public enum TeRotDirctn {
+      CW,
+      CCW;
+  }
+
+  public enum Te_RZL_St {
+      Inactv,
+      Init,
+      SwpCW,
+      SwpCCW,
+      ZeroDtct,
+      ZeroCptr,
+      Cmplt;
+  }  
 
   private final int Me_i_ModIdx;
 
-  private final CANSparkMax Ms_h_RotMtr;
-  private final CANEncoder Ms_h_RotEncdr;
+  private final CANSparkMax  Ms_h_RotMtr;
+  private final CANEncoder   Ms_h_RotEncdr;
+  private final DigitalInput Ms_b_RotZeroDtcd;
    
   private final TalonFX Ms_h_DrvMtr;
 
+  
   private int Me_r_ModRevs;
 
+  /* Rotation Motor Data */
   private double Me_r_RotEncdrZeroOfst;
   private double Me_t_RotMtrStlInitTm;
  
+  /* Rotation Zero Position Learn */
+  private Te_RZL_St Me_e_RZL_St;
+  private double    Me_Deg_RZL_AngInit;
+  private double    Me_Deg_RZL_AngSwp;
+  private double    Me_Deg_RZL_AngTgt;
+  private double    Me_r_RZL_Pwr;
+  private Timer     Me_t_RZL_DtctTmr = new Timer();
+
+  /* Drive Motor Data */
   private double Me_r_DrvEncdrZeroPstn;
   private TeMtrDirctn Me_e_DrvMtrDirctn;
   private boolean Me_b_DrvMtrDirctnUpdInhb;
   private boolean Me_b_DrvMtrDirctnUpdTrig;
 
+
   /*******************************/
   /* Subsystem Constructor */
   /*******************************/
-  SwerveDriveModule(final int Le_i_ModIdx, final CANSparkMax Ls_h_RotMtr, final TalonFX Ls_h_DrvMtr, final double Le_r_RotEncdrZeroOfst) {
+  SwerveDriveModule(final int Le_i_ModIdx, final CANSparkMax Ls_h_RotMtr, final TalonFX Ls_h_DrvMtr, final DigitalInput Ls_b_RotZeroDtcd,final double Le_r_RotEncdrZeroOfst) {
     Me_i_ModIdx = Le_i_ModIdx;
     Me_r_ModRevs = (int)0;
-
+  
     Ms_h_RotMtr = Ls_h_RotMtr;
     Ms_h_RotEncdr = Ms_h_RotMtr.getEncoder();
+    Ms_b_RotZeroDtcd = Ls_b_RotZeroDtcd;
 
     Ms_h_DrvMtr = Ls_h_DrvMtr;
 
     Me_r_RotEncdrZeroOfst = Le_r_RotEncdrZeroOfst;
     Me_t_RotMtrStlInitTm = 0;
 
+    Me_e_RZL_St = Te_RZL_St.Init;
+    Me_Deg_RZL_AngInit = 0;
+    Me_Deg_RZL_AngSwp = 0;
+    Me_Deg_RZL_AngTgt = 0;
+    Me_r_RZL_Pwr = 0;
+    Me_t_RZL_DtctTmr.reset();
+    
     Me_r_DrvEncdrZeroPstn = Ms_h_DrvMtr.getSelectedSensorPosition();
     Me_e_DrvMtrDirctn = TeMtrDirctn.Fwd;
     Me_b_DrvMtrDirctnUpdInhb = false;
@@ -331,6 +369,18 @@ public class SwerveDriveModule extends SubsystemBase {
     Ms_h_RotMtr.getPIDController().setReference(Le_r_RotMtrPwr, ControlType.kDutyCycle);
   }
 
+
+  /**
+   * Method: getRotEncdrZeroDtctd - Swerve Drive System: Returns the state
+   * of the Rotation Motor Encoder Zero Position Detection Sensor.
+   * @return Le_b_ZeroPstnDetect   (boolean: Rotation Zero Position Switch State - Inverted)
+   */
+	public boolean getRotEncdrZeroDtctd() {
+    boolean Le_b_ZeroPstnDetect;  // Presently a False indicates a Zero Position Detection.
+    Le_b_ZeroPstnDetect = !(Ms_b_RotZeroDtcd.get());  // So Invert Digital Input
+    return(Le_b_ZeroPstnDetect);
+  }
+
   /**
    * Method: getRotEncdrZeroOfst - Swerve Drive System: Returns the Rotational
    * Motor Encoder Target Angle Zero Offset in Swerve Caddy Degrees of Angle.
@@ -346,6 +396,139 @@ public class SwerveDriveModule extends SubsystemBase {
   public void resetRotEncdrZeroOfst() {
     Me_r_RotEncdrZeroOfst = Ms_h_RotEncdr.getPosition();
   }
+
+
+  /**
+   * Method: learnRotEncdrZeroOfst - Swerve Drive System: Learns the Rotational
+   * Motor Encoder Position Zero Offset by sweeping the caddy rotation until
+   * the Zero Position Sensor is tripped for a duration of time.
+   */
+  public Te_RZL_St learnRotEncdrZeroOfst(boolean Le_b_RLZ_InitTrig) {
+
+    /* Initialize Process */
+    if (Le_b_RLZ_InitTrig == true) {
+      Me_e_RZL_St = Te_RZL_St.Init;
+    }
+
+    if (Me_e_RZL_St == Te_RZL_St.Inactv)  {
+      /* Do Nothing - Skip to End to Exit */
+    }
+    /* **Init State** */
+    else if (Me_e_RZL_St == Te_RZL_St.Init)  {
+      Me_Deg_RZL_AngInit = getRotActAngRaw();
+      Me_Deg_RZL_AngSwp = K_SWRV.KeSWRV_Deg_RZL_AngSwpCourse;
+      Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit + Me_Deg_RZL_AngSwp;
+      Me_r_RZL_Pwr = K_SWRV.KeSWRV_r_RZL_PwrSwpCourse;
+      Me_t_RZL_DtctTmr.reset(); 
+
+      /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+      if (getRotEncdrZeroDtctd() == true) {
+        Me_e_RZL_St = Te_RZL_St.ZeroDtct;
+        sweepCaddyToAng(TeRotDirctn.CW, 0.0);
+        Me_t_RZL_DtctTmr.start();
+      }
+      else {
+      Me_e_RZL_St = Te_RZL_St.SwpCW;
+      sweepCaddyToAng(TeRotDirctn.CW, Me_r_RZL_Pwr);
+      }
+    }
+    /* **Sweep CW State** */
+    else if (Me_e_RZL_St == Te_RZL_St.SwpCW) {
+      /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+      if (getRotEncdrZeroDtctd() == true) {
+        Me_e_RZL_St = Te_RZL_St.ZeroDtct;
+        sweepCaddyToAng(TeRotDirctn.CW, 0.0);
+        Me_t_RZL_DtctTmr.start();
+      }
+      else if (getRotActAngRaw() >= Me_Deg_RZL_AngTgt) {
+        Me_e_RZL_St = Te_RZL_St.SwpCCW;
+        Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit - Me_Deg_RZL_AngSwp;
+        sweepCaddyToAng(TeRotDirctn.CCW, Me_r_RZL_Pwr);
+      }
+      else {
+        sweepCaddyToAng(TeRotDirctn.CW, Me_r_RZL_Pwr);
+      }    
+    }
+    /* **Sweep CCW State** */
+    else if (Me_e_RZL_St == Te_RZL_St.SwpCCW) {
+      /* **Zero Position Sensor Detected - Goto Zero Detected State** */
+      if (getRotEncdrZeroDtctd() == true) {
+        Me_e_RZL_St = Te_RZL_St.ZeroDtct;
+        sweepCaddyToAng(TeRotDirctn.CW, 0.0);
+        Me_t_RZL_DtctTmr.start();
+      }
+      else if (getRotActAngRaw() <= Me_Deg_RZL_AngTgt) {
+        Me_e_RZL_St = Te_RZL_St.SwpCW;
+        Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit;
+        sweepCaddyToAng(TeRotDirctn.CW, Me_r_RZL_Pwr);
+      }
+      else {
+        sweepCaddyToAng(TeRotDirctn.CCW, Me_r_RZL_Pwr);
+      }
+    }
+    /* **Zero Detect State** */
+    else if (Me_e_RZL_St == Te_RZL_St.ZeroDtct) {
+      /* **Zero Position Sensor Still Detected - Goto Zero Detected State** */
+      if (getRotEncdrZeroDtctd() == true) {
+        if(Me_t_RZL_DtctTmr.get() >= K_SWRV.KeSWRV_t_RZL_ZeroDtctThrsh) {
+          Me_e_RZL_St = Te_RZL_St.ZeroCptr;          
+        }
+        else {
+          sweepCaddyToAng(TeRotDirctn.CW, 0.0);
+        }
+      }
+      else{
+        /* **Zero Position Sensor No Longer Detected - Start Short Sweep Again Slower** */
+        Me_Deg_RZL_AngInit = getRotActAngRaw();
+        Me_Deg_RZL_AngSwp = K_SWRV.KeSWRV_Deg_RZL_AngSwpFine;
+        Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit + Me_Deg_RZL_AngSwp;
+        Me_r_RZL_Pwr = K_SWRV.KeSWRV_r_RZL_PwrSwpFine;
+        Me_e_RZL_St = Te_RZL_St.SwpCW;
+      }   
+    }    
+    /* **Zero Captured State** */
+    else if (Me_e_RZL_St == Te_RZL_St.ZeroCptr) {
+      resetRotEncdr();
+      Me_e_RZL_St = Te_RZL_St.Cmplt;
+    }
+    /* **Zero Captured State** */
+    else if (Me_e_RZL_St == Te_RZL_St.Cmplt) {
+      /* Remain Complete until De-Activated */
+      Me_e_RZL_St = Te_RZL_St.Cmplt;
+    }
+
+  return (Me_e_RZL_St);
+  }
+
+
+  public Te_RZL_St getRotEncdrZeroLearnSt() {
+    return (Me_e_RZL_St);
+  }
+
+  public void setRotEncdrZeroLearnSt(Te_RZL_St Le_e_RZL_St) {
+    Me_e_RZL_St = Le_e_RZL_St;
+  }
+
+
+
+
+
+/**
+  * Method: sweepCaddyToAng - 
+  *
+  * @param
+  * @param
+  */
+public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
+  double Le_r_RotDirctnSclr = 1;
+
+  if (Le_e_RotDirctn == TeRotDirctn.CCW)
+    Le_r_RotDirctnSclr = -1;
+  setRotMtrPwr(Le_r_PwrLvl * Le_r_RotDirctnSclr);
+}
+
+
+
 
 
 

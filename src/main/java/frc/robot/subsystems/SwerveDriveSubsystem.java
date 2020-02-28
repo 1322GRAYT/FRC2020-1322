@@ -4,46 +4,39 @@ import frc.robot.Constants;
 import frc.robot.SwrvMap;
 import frc.robot.calibrations.K_SWRV;
 import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
+import frc.robot.subsystems.SwerveDriveModule.TeRotDirctn;
+import frc.robot.subsystems.SwerveDriveModule.Te_RZL_St;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.controller.PIDController;
 
 
 public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
-	public enum TeRotDirctn {
-        CW,
-        CCW;
-   }
-
-
 	private static final double VeSDRV_r_ChassisTrkRat = Math.sqrt(Math.pow(K_SWRV.KeSWRV_l_ChassisWhlBase, 2) + Math.pow(K_SWRV.KeSWRV_l_ChassisTrkWdth, 2));
 
 	private SwerveDriveModule[] SwrvDrvMod = new SwerveDriveModule[] {                            
-		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_RT_DRV), 0), //real:298 practice: 56
-		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_LT_DRV), 0), //real:355 practice: 190
-		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_LT_DRV), 0), //real:293 practice: 59
-		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_RT_DRV), 0)  //real:390 practice: 212
-	};
-
-	private DigitalInput[] VaSDRV_b_RotZeroDtcd = new DigitalInput[] {
-		new DigitalInput(Constants.SWRV_ZERO_FR_RT),
-		new DigitalInput(Constants.SWRV_ZERO_FR_LT),
-		new DigitalInput(Constants.SWRV_ZERO_RR_LT),
-		new DigitalInput(Constants.SWRV_ZERO_RR_RT)
+		new SwerveDriveModule(SwrvMap.RtFt, new CANSparkMax(Constants.SWRV_FR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_RT_DRV), new DigitalInput(Constants.SWRV_ZERO_FR_RT), 0), //real:298 practice: 56
+		new SwerveDriveModule(SwrvMap.LtFt, new CANSparkMax(Constants.SWRV_FR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_FR_LT_DRV), new DigitalInput(Constants.SWRV_ZERO_FR_LT), 0), //real:355 practice: 190
+		new SwerveDriveModule(SwrvMap.LtRr, new CANSparkMax(Constants.SWRV_RR_LT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_LT_DRV), new DigitalInput(Constants.SWRV_ZERO_RR_LT), 0), //real:293 practice: 59
+		new SwerveDriveModule(SwrvMap.RtRr, new CANSparkMax(Constants.SWRV_RR_RT_ROT, MotorType.kBrushless), new TalonFX(Constants.SWRV_RR_RT_DRV), new DigitalInput(Constants.SWRV_ZERO_RR_RT), 0)  //real:390 practice: 212
 	};
 
 	private AHRS mNavX = new AHRS(SPI.Port.kMXP, (byte) 200);
 
 
-	boolean VeSDRV_b_SwrvRotRqstActv;
+	private boolean VeSDRV_b_SwrvRotRqstActv;
+	private boolean VeSDRV_b_RZL_Rqst;
+	private boolean VeSDRV_b_RZL_RqstPrev;
+	private boolean VeSDRV_b_RZL_Cmplt;
+	
 
 	double[] VaSDRV_r_RotEncdrActRaw     = new double[SwrvMap.NumOfCaddies];
 	double[] VaSDRV_r_RotEncdrActCorr    = new double[SwrvMap.NumOfCaddies];	
@@ -95,7 +88,12 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		  VaSDRV_r_RotEncdrTgt[i]       = 0;
 		  VaSDRV_r_RotEncdrTgtCorr[i]   = 0;
 		}
-    
+
+	    VeSDRV_b_SwrvRotRqstActv = false;
+		VeSDRV_b_RZL_Rqst        = false;
+		VeSDRV_b_RZL_RqstPrev    = false;
+	    VeSDRV_b_RZL_Cmplt       = false;
+
 		VeSDRV_v_DrvSpdMax  = 0.0;
 		VeSDRV_r_MtrSpdMult = 1.0;
 
@@ -563,6 +561,49 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
+	public void setSDRV_RZL_Rqst(boolean Le_b_RZL_Rqst) {
+	    VeSDRV_b_RZL_Rqst = Le_b_RZL_Rqst;
+	}
+
+
+   public boolean getSDRV_RZL_Cmpt() {
+	 return (VeSDRV_b_RZL_Cmplt);
+	 }
+
+
+   public void mngSDRV_RZL_SchedTask() {
+	 boolean Le_b_RZL_InitTrig = false;
+	 Te_RZL_St Le_e_St_RtFt, Le_e_St_LtFt, Le_e_St_LtRr, Le_e_St_RtRr;
+	 
+		if (VeSDRV_b_RZL_Rqst == true) {
+		  if (VeSDRV_b_RZL_RqstPrev = false) {
+			Le_b_RZL_InitTrig = true;
+			VeSDRV_b_RZL_Cmplt = false;
+		  }
+
+		setDrvMtrSpdsZero();
+
+		Le_e_St_RtFt = SwrvDrvMod[SwrvMap.RtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		Le_e_St_LtFt = SwrvDrvMod[SwrvMap.LtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		Le_e_St_LtRr = SwrvDrvMod[SwrvMap.LtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		Le_e_St_RtRr = SwrvDrvMod[SwrvMap.RtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);			
+
+		if ((Le_e_St_RtFt == Te_RZL_St.Cmplt) && (Le_e_St_LtFt == Te_RZL_St.Cmplt) &&
+		    (Le_e_St_LtRr == Te_RZL_St.Cmplt) && (Le_e_St_RtRr == Te_RZL_St.Cmplt)) {
+		  VeSDRV_b_RZL_Cmplt = true;
+		}
+	  }
+	  else {
+        SwrvDrvMod[SwrvMap.RtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+        SwrvDrvMod[SwrvMap.LtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+        SwrvDrvMod[SwrvMap.LtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+        SwrvDrvMod[SwrvMap.RtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+	  }
+
+	  VeSDRV_b_RZL_RqstPrev = VeSDRV_b_RZL_Rqst;
+	}
+   
+
 	public void driveForwardAtSpd(double Le_Deg_HdgAng, double Le_r_PwrLvl){
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
@@ -671,9 +712,24 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	/*     Subsystem Data Interfaces                 */
 	/*************************************************/
 
+	
 	public boolean getRotZeroDtctd(int Le_i_SwrvModIdx) {
-	     return(VaSDRV_b_RotZeroDtcd[Le_i_SwrvModIdx].get());
+	     return(SwrvDrvMod[Le_i_SwrvModIdx].getRotEncdrZeroDtctd());
 	}
+
+
+	public void setDrvMtrSpdsZero() {
+	  for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
+		SwrvDrvMod[i].setDrvMtrPwr(0);
+		SwrvDrvMod[i].setDrvMtrPwr(0);
+		SwrvDrvMod[i].setDrvMtrPwr(0);
+		SwrvDrvMod[i].setDrvMtrPwr(0);
+	  }
+    }
+
+
+
+
 
     public void setDrvMtrSpd(int Le_i_MtrBnk, double Le_r_DrvPwr) {
 		TeMtrDirctn Le_e_DrvMtrDirctn;

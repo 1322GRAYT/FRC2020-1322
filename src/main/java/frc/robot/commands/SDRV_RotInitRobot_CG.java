@@ -22,10 +22,7 @@ public class SDRV_RotInitRobot_CG extends SequentialCommandGroup {
   public SDRV_RotInitRobot_CG(SwerveDriveSubsystem swerveDriveSubsystem) {
     super(
       (new SDRV_RotRstZero(swerveDriveSubsystem)),
-      (new SDRV_RotFindZero(swerveDriveSubsystem, SwrvMap.RtFt)),
-      (new SDRV_RotFindZero(swerveDriveSubsystem, SwrvMap.LtFt)),
-      (new SDRV_RotFindZero(swerveDriveSubsystem, SwrvMap.LtRr)),
-      (new SDRV_RotFindZero(swerveDriveSubsystem, SwrvMap.RtRr))
+      (new SDRV_RotFindZero(swerveDriveSubsystem))
     );
 
   }
