@@ -79,10 +79,10 @@ public class RobotContainer {
      4:  Button Y
      5:  Bumper Left
      6:  Bumper Right
-     7:  Button Start
-     8:  Button Menu
-     9:  Button Left Joystick Press
-     10: Button Right Joystick Press
+     7:  Button Back  (Left)
+     8:  Button Start (Right)
+     9:  Joystick Press Left
+     10: Joystick Press Right
 
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by
@@ -96,18 +96,11 @@ public class RobotContainer {
     // Shifter Command (Y for high gear, X for low gear)
     new JoystickButton(driverStick, 4).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
     new JoystickButton(driverStick, 1).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
-    /* For Testing Only */
-    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
-    //    new JoystickButton(driverStick, 1).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtRr));
-    //    new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtFt));
-    //    new JoystickButton(driverStick, 3).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtRr));
-    //    new JoystickButton(driverStick, 4).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.LtFt));
-    //    new JoystickButton(driverStick, 5).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.LtSd, 0.5));
-    //    new JoystickButton(driverStick, 6).whileHeld(new SDRV_DrvFwdTest(swerveDriveSystem, SwrvMap.RtSd, 0.5));
+    /* Rotation Control Encoder Zero Position Learn */
+    new JoystickButton(driverStick, 8).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
 
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
     auxStick = new XboxController(1);
- 
     // Manual Shoot
     new JoystickButton(auxStick, 3).whenPressed(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
     // Color Wheel Commands (Start for Gain All control, Y to cancel)

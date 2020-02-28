@@ -84,30 +84,34 @@ public class K_SWRV {
 
 
 
-
-
   /*******************************************************/
   /*  Swerve Drive-System Design Mechanical Parameters   */
  	/*******************************************************/	 	
-
-	  /** KeSWRV_Cf_DrvMtrEncdrCntsPerRev: Swerve Drive System - Conversion
-     * Factor of the Number of Encoder Counts Per One Rotation of the
-     * Drive Control Motor.
-     */
-    public static final double KeSWRV_Cf_DrvMtrEncdrCntsPerRev = 42;
-
-
-	  /** KeSWRV_r_RotMtrEncdrToCaddyRat: Swerve Drive System - Conversion
+	
+	  /** KeSWRV_Cf_DrvEncdrCntsPerInchHi: Swerve Drive System - Conversion
      * Factor of the Number of Drive Motor Encoder Counts of Rotation
-     * per 1 Linear inch of Drive Wheel travel.
+     * per 1 Linear inch of Drive Wheel travel in Low Gear Ratio.
      */
-    public static final double KeSWRV_Cf_DrvMtrEncdrCntsToInch = 35.6;
+    public static final double KeSWRV_Cf_DrvEncdrCntsPerInchHi = 35.6;
+
+
+	  /** KeSWRV_Cf_DrvEncdrCntsPerInchLo: Swerve Drive System - Conversion
+     * Factor of the Number of Drive Motor Encoder Counts of Rotation
+     * per 1 Linear inch of Drive Wheel travel in Low Gear Ratio.
+     */
+    public static final double KeSWRV_Cf_DrvEncdrCntsPerInchLo = 35.6;
+
+
+	  /** KeSWRV_Cnt_DrvEncdrCntsPerRev: Swerve Drive System: Number
+     * of Encoder Counts Per One Revolution of the Drive Motors
+     */
+    public static final double KeSWRV_Cnt_DrvEncdrCntsPerRev = 360;
 
 
 	  /** KeSWRV_l_DrvWhlDistPerRot: Swerve Drive System: Number of lineal
      * distance travaled per one rotation of Swerve Drive Wheel Rotation
      */
-    public static final double KeSWRV_l_DrvWhlDistPerRot = 4.0 * Math.PI;
+    public static final double KeSWRV_l_DrvWhlDistPerRot = 4.0 * Math.PI; // 12.57142857
 
 
     /** KeSWRV_r_DrvMtrEncdrToWhlRatLo: Swerve Drive System: Number of
@@ -132,13 +136,13 @@ public class K_SWRV {
 	  /** KeSWRV_K_RotProp: Swerve Drive System Rotation Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_RotProp = 1.0;
+    public static final double KeSWRV_K_RotProp = 2.0;
 
 
 	  /** KeSWRV_K_RotPropIntgl: Swerve Drive System Rotation Control
      * Integral Control Gain. 
      */
-    public static final double KeSWRV_K_RotIntgl = 0.0;
+    public static final double KeSWRV_K_RotIntgl = 0.001;
 
 
 	  /** KeSWRV_K_RotDeriv: Swerve Drive System Rotation Control
@@ -181,7 +185,7 @@ public class K_SWRV {
 	  /** KeSWRV_K_DrvProp: Swerve Drive System Drive Control
      * Proporational Control Gain. 
      */
-    public static final double KeSWRV_K_DrvProp = 1.0;
+    public static final double KeSWRV_K_DrvProp = 2.0;
 
 
 	  /** KeSWRV_K_DrvPropIntgl: Swerve Drive System Drive Control
@@ -287,10 +291,29 @@ public class K_SWRV {
   /*  Rotation Zero Offset Learn Algorithm    */
  	/********************************************/	 	
 
+   /** KeSWRV_Deg_RZL_AngSwpCourse: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Relative Sweep Angle for Coarse Zero Search. 
+     */
     public static final double KeSWRV_Deg_RZL_AngSwpCourse = 90;
+
+   /** KeSWRV_Deg_RZL_AngSwpFine: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Relative Sweep Angle for Fine Zero Search. 
+     */
     public static final double KeSWRV_Deg_RZL_AngSwpFine = 10;
-    public static final double KeSWRV_r_RZL_PwrSwpCourse = 0.15;
+
+   /** KeSWRV_r_RZL_PwrSwpCourse: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Power Level for Coarse Zero Search. 
+     */    
+    public static final double KeSWRV_r_RZL_PwrSwpCourse = 0.20;
+
+   /** KeSWRV_r_RZL_PwrSwpFine: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Power Level for Fine Zero Search. 
+     */    
     public static final double KeSWRV_r_RZL_PwrSwpFine = 0.05;
+
+   /** KeSWRV_t_RZL_ZeroDtctThrsh: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Zero Detection Time. 
+     */    
     public static final double KeSWRV_t_RZL_ZeroDtctThrsh = 0.250;
 
 

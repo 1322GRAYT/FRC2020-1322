@@ -516,23 +516,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
-	public void sweepSwerveCaddyToAng(int Le_i_SwrvModIdx, TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
-		double Le_r_RotDirctnSclr = 1;
-
-		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-			if (i == Le_i_SwrvModIdx)  {
-			  if (Le_e_RotDirctn == TeRotDirctn.CCW)
-			      Le_r_RotDirctnSclr = -1;
-			  SwrvDrvMod[i].setRotMtrPwr(Le_r_PwrLvl * Le_r_RotDirctnSclr);
-			  SwrvDrvMod[i].setDrvMtrPwr(0);
-			}
-			else
-			  SwrvDrvMod[i].setRotMtrPwr(0);
-			  SwrvDrvMod[i].setDrvMtrPwr(0);
-		}
-	}
-
-
 	public void runSwerveCaddyAtPwr(int Le_i_SwrvBnkIdx, TeMtrDirctn Le_e_MtrDirctn, double Le_r_PwrLvl) {
 
 		double Le_r_MtrDirctnSclr = (Le_e_MtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
@@ -554,31 +537,39 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	        SwrvDrvMod[i].setRotMtrPwr(0);
 		}
 	}
-
+	
 
 	public double getSwerveCaddyAng(int Le_i_SwrvMod) {
 	    return(SwrvDrvMod[Le_i_SwrvMod].getRotActAngRaw());
 	}
 
 
+	public boolean getSDRV_RZL_Rqst() {
+		return (VeSDRV_b_RZL_Rqst);
+		}
+	  
+
 	public void setSDRV_RZL_Rqst(boolean Le_b_RZL_Rqst) {
 	    VeSDRV_b_RZL_Rqst = Le_b_RZL_Rqst;
 	}
 
 
-   public boolean getSDRV_RZL_Cmpt() {
-	 return (VeSDRV_b_RZL_Cmplt);
-	 }
+    public boolean getSDRV_RZL_Cmplt() {
+	  return (VeSDRV_b_RZL_Cmplt);
+	}
+
+	public void setSDRV_RZL_Cmplt(boolean Le_b_RZL_Cmplt) {
+	  VeSDRV_b_RZL_Cmplt = Le_b_RZL_Cmplt;
+	}
 
 
-   public void mngSDRV_RZL_SchedTask() {
-	 boolean Le_b_RZL_InitTrig = false;
-	 Te_RZL_St Le_e_St_RtFt, Le_e_St_LtFt, Le_e_St_LtRr, Le_e_St_RtRr;
+    public void mngSDRV_RZL_SchedTask() {
+	  boolean Le_b_RZL_InitTrig = false;
+	  Te_RZL_St Le_e_St_RtFt, Le_e_St_LtFt, Le_e_St_LtRr, Le_e_St_RtRr;
 	 
 		if (VeSDRV_b_RZL_Rqst == true) {
 		  if (VeSDRV_b_RZL_RqstPrev = false) {
 			Le_b_RZL_InitTrig = true;
-			VeSDRV_b_RZL_Cmplt = false;
 		  }
 
 		setDrvMtrSpdsZero();
@@ -604,6 +595,26 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
    
 
+	public void sweepSwerveCaddyToAng(int Le_i_SwrvModIdx, TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
+		double Le_r_RotDirctnSclr = 1;
+
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+			if (i == Le_i_SwrvModIdx)  {
+			  if (Le_e_RotDirctn == TeRotDirctn.CCW)
+			      Le_r_RotDirctnSclr = -1;
+			  SwrvDrvMod[i].setRotMtrPwr(Le_r_PwrLvl * Le_r_RotDirctnSclr);
+			  SwrvDrvMod[i].setDrvMtrPwr(0);
+			}
+			else
+			  SwrvDrvMod[i].setRotMtrPwr(0);
+			  SwrvDrvMod[i].setDrvMtrPwr(0);
+		}
+	}
+
+
+
+
+
 	public void driveForwardAtSpd(double Le_Deg_HdgAng, double Le_r_PwrLvl){
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
@@ -628,12 +639,14 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		HolonomicDrv(0, Le_r_PwrLvl, 0);
 	}
 
+
 	public void driveSidewaysToDist(double Le_l_TgtPos, double Le_Deg_HdgAng, double Le_r_PwrLvl) {
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
 		Le_Deg_HdgAngErr = Math.max(Le_Deg_HdgAngErr, -1);
 		HolonomicDrv(0, Le_r_PwrLvl, Le_Deg_HdgAngErr);
 	}
+
 
 
 	public void driveRotateAtSpd(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
@@ -651,6 +664,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	public void driveRotateToAng(TeRotDirctn Le_e_RotDirctn, double Le_Deg_RotTgt, double Le_r_PwrLvl) {
 		double Le_Deg_RotErr = ((Le_Deg_RotTgt - mNavX.getYaw()) / 180)*10;
 		Le_Deg_RotErr = Math.min(Le_Deg_RotErr, 1);
+
 		Le_Deg_RotErr = Math.max(Le_Deg_RotErr, -1);
 		if (Math.abs(Le_Deg_RotErr) < 5 )
 		  Le_r_PwrLvl *= 0.25;
@@ -665,6 +679,8 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		SwrvDrvMod[SwrvMap.RtFt].setDrvMtrPwr(Le_r_PwrDrv);
 		SwrvDrvMod[SwrvMap.LtFt].setDrvMtrPwr(Le_r_PwrDrv);
 	}
+
+
 
 
 	public double calcDrvPosErr(double Le_l_DrvDistTgtInches) {
@@ -775,8 +791,14 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	SmartDashboard.putNumber("Cntrlr Pwr Lat " ,  VeSDRV_r_PwrLat);
 	SmartDashboard.putNumber("Cntrlr Pwr Rot " ,  VeSDRV_r_PwrRot);
 
+	SmartDashboard.putBoolean("RZL Rqst " , VeSDRV_b_RZL_Rqst);
+	SmartDashboard.putBoolean("RZL Cmplt " , VeSDRV_b_RZL_Cmplt);
+
 	for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-		
+
+	   SmartDashboard.putString("RZL St " + i ,            SwrvDrvMod[i].getRotEncdrZeroLearnSt().toString());
+      
+
 	   SmartDashboard.putNumber("Calc Ang Raw " + i ,      VaSDRV_Deg_RotAngCalcRaw[i]);
 	   SmartDashboard.putNumber("Calc Ang Cnvrtd " + i ,   VaSDRV_Deg_RotAngCalcCnvrtd[i]);
 	   SmartDashboard.putNumber("Calc Ang Ltch " + i ,     VaSDRV_Deg_RotAngCalcLtch[i]);

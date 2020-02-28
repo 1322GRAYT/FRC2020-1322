@@ -12,20 +12,31 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveShiftPos;
+
 public class ShiftSubsystem extends SubsystemBase {
-  DoubleSolenoid shifterSolenoid;
+  private DoubleSolenoid shifterSolenoid;
+  private DriveShiftPos  selectedGearRatio;
+
 
   public ShiftSubsystem() {
     shifterSolenoid = new DoubleSolenoid(Constants.DRIVE_SHIFT_0, Constants.DRIVE_SHIFT_1);
   }
 
   public void shiftShifter(Constants.DriveShiftPos pos) {
-    if(pos == DriveShiftPos.HIGH_GEAR) {
+    selectedGearRatio = pos;
+    if(selectedGearRatio == DriveShiftPos.HIGH_GEAR) {
       this.shifterSolenoid.set(Value.kForward);
     } else {
       this.shifterSolenoid.set(Value.kReverse);
     }
   }
+
+
+  public DriveShiftPos getSelectedGearRatio() {
+    return (selectedGearRatio);
+  }
+
+
 
   @Override
   public void periodic() {

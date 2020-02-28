@@ -19,13 +19,14 @@ public class SDRV_RotFindZero extends CommandBase {
   SwerveDriveSubsystem swerveDriveSubsystem;
  
   public SDRV_RotFindZero(SwerveDriveSubsystem swerveDriveSubsystem) {
-    this.swerveDriveSubsystem = swerveDriveSubsystem;
-    addRequirements(this.swerveDriveSubsystem);
+
+    addRequirements(swerveDriveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    swerveDriveSubsystem.setSDRV_RZL_Cmplt(false);
     swerveDriveSubsystem.setSDRV_RZL_Rqst(true);
   }
 
@@ -44,6 +45,6 @@ public class SDRV_RotFindZero extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return (swerveDriveSubsystem.getSDRV_RZL_Cmpt() == true);
+    return (swerveDriveSubsystem.getSDRV_RZL_Cmplt() == true);
   }
 }
