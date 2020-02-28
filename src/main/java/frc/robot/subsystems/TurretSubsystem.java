@@ -7,103 +7,67 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.ParamEnum;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANEncoder;
+import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class TurretSubsystem extends SubsystemBase {
 
-  private TalonSRX pan, tilt;
   private CANSparkMax shooter1, shooter2;
+  CANPIDController PIDShooter1, PIDShooter2;
+  CANEncoder ShootEncoder1, ShootEncoder2;
+
+  double[] Shooter1kPIDF = {0.0001, 0, 0.0000, .000185};
+  double[] Shooter2kPIDF = {0.0001, 0, 0.0000, .000185};
 
   /**
    * Creates a new ShooterPositionSubsystem.
    */
   public TurretSubsystem() {
-    pan = new TalonSRX(Constants.SHOOTER_AIM_PAN);
-    tilt = new TalonSRX(Constants.SHOOTER_AIM_TILT);
     shooter1 = new CANSparkMax(Constants.SHOOTER_ONE, MotorType.kBrushless);
     shooter2 = new CANSparkMax(Constants.SHOOTER_TWO, MotorType.kBrushless);
-    shooter2.follow(shooter1, true);
+    //shooter2.follow(shooter1, true);
 
-    int CruiseVelocity = 250; // Ticks per 100ms, for pan and tilt
-    int Acceleration = 30; // Ticks per 100ms per second, for pan and tilt
-    
-    double[] PanTiltkPIDF = {0.1, 0, 0, 4.5};
-    
+    PIDShooter1 = shooter1.getPIDController();
+    PIDShooter2 = shooter2.getPIDController();
 
-    /* Config Pan used for Primary PID [Velocity] */
-    pan.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 30);
-    pan.configSetParameter(ParamEnum.eProfileParamSlot_P, PanTiltkPIDF[0], 0, 0);
-    pan.configSetParameter(ParamEnum.eProfileParamSlot_I, PanTiltkPIDF[1], 0, 0);
-    pan.configSetParameter(ParamEnum.eProfileParamSlot_D, PanTiltkPIDF[2], 0, 0);
-    pan.configSetParameter(ParamEnum.eProfileParamSlot_F, PanTiltkPIDF[3], 0, 0);
-    pan.configMotionCruiseVelocity(CruiseVelocity);
-    pan.configMotionAcceleration(Acceleration);
+    ShootEncoder1 = shooter1.getEncoder();
+    ShootEncoder2 = shooter2.getEncoder();
 
-    /* Config Pan used for Primary PID [Velocity] */
-    tilt.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 30);
-    tilt.configSetParameter(ParamEnum.eProfileParamSlot_P, PanTiltkPIDF[0], 0, 0);
-    tilt.configSetParameter(ParamEnum.eProfileParamSlot_I, PanTiltkPIDF[1], 0, 0);
-    tilt.configSetParameter(ParamEnum.eProfileParamSlot_D, PanTiltkPIDF[2], 0, 0);
-    tilt.configSetParameter(ParamEnum.eProfileParamSlot_F, PanTiltkPIDF[3], 0, 0);
-    tilt.configMotionCruiseVelocity(CruiseVelocity);
-    tilt.configMotionAcceleration(Acceleration);
+    PIDShooter1.setP(Shooter1kPIDF[0]);
+    PIDShooter1.setI(Shooter1kPIDF[1]);
+    PIDShooter1.setD(Shooter1kPIDF[2]);
+    PIDShooter1.setFF(Shooter1kPIDF[3]);
+
+    PIDShooter2.setP(Shooter2kPIDF[0]);
+    PIDShooter2.setI(Shooter2kPIDF[1]);
+    PIDShooter2.setD(Shooter2kPIDF[2]);
+    PIDShooter2.setFF(Shooter2kPIDF[3]);
   }
 
-  // TODO: Calculate Velocity for different target sizes
-  // Smaller Target = Futher Away = More Velocity Needed
-  public void prepareShooter(double targetSize) {
-    shooter1.set(1);
+  int setBottomShooterSpeed = 5000;
+  int setTopShooterSpeed = -2000;
+  int tol = 300;
+  public void pidShoot(boolean activate){
+    PIDShooter1.setReference(activate ? setBottomShooterSpeed : 0, ControlType.kVelocity);
+    PIDShooter2.setReference(activate ? setTopShooterSpeed : 0, ControlType.kVelocity);
+  }
+
+  public double getSpeed(){
+    return ShootEncoder1.getVelocity();
+  }
+
+  public boolean isShooterAtSpeed(){
+    return Math.abs(getSpeed() - setBottomShooterSpeed) < tol;
   }
 
   public void runShooter(double speed) {
     shooter1.set(speed);
-  }
-  
-  public void pan(double speed) {
-    pan.set(ControlMode.PercentOutput, speed);
-  }
-
-  public void tilt(double speed) {
-    tilt.set(ControlMode.PercentOutput, speed);
-  }
-
-  public void manualControl(double pan, double tilt){
-    this.pan.set(ControlMode.PercentOutput, pan);
-    this.tilt.set(ControlMode.PercentOutput, tilt);
-  }
-
-  public void panGoToAngle(double angle){
-    this.pan.set(ControlMode.MotionMagic, angle);
-  }
-
-  public double panEncoder(){
-    return PanTickToDegrees(pan.getSelectedSensorPosition());
-  }
-
-  public double tiltEncoder(){
-    return TiltTickToDegrees(tilt.getSelectedSensorPosition());
-  }
-
-  int PanDegreeToTick(double in){
-    return (int)(in / (9/7 * 16/187));
-  }
-  
-  double PanTickToDegrees(int in){
-    return in * 9/(7*4) * 16/187;
-  }
-
-  double TiltTickToDegrees(int in){
-    return (double)in / 121.8;
   }
 
   @Override

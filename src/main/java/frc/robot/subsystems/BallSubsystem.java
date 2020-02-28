@@ -12,6 +12,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -65,39 +66,9 @@ public class BallSubsystem extends SubsystemBase {
     public void runAdvance(double speed) {
       ballAdvance.set(ControlMode.PercentOutput, speed);
     }
-    /**
-     * Raises or Lowers the ball intake by running it for 1 second.
-     * There are physical limits, and physical limit
-     * switches so we don't risk breaking anything
-     * @param pos Lift Position to go to
-     */
-    public void raiseLowerIntake(IntakeLiftPosition pos) {
-      new Thread() {
-        public void run() {
-          if(pos != currentPos) {
-            Timer liftTimer = new Timer();
-            liftTimer.reset();
-            liftTimer.start();
-            if(pos == IntakeLiftPosition.UP) {
-              runLift(Constants.RAISE_INTAKE_SPEED);
-            } else if(pos == IntakeLiftPosition.DOWN){
-              runLift(Constants.LOWER_INTAKE_SPEED);
-            }
-            while(liftTimer.get() < Constants.LOWER_INTAKE_TIME_SEC) {
-              // Do Nothing
-            }
-            runLift(0);
-            setCurrentIntakePosition(pos);
-            liftTimer.stop();
-          }
-        }
-      }.run();
-    }
 
     /**
      * Runs the intake lift
-     * This is private because the method users should be using is
-     * called Raise/Lower Lift
      * @param speed Speed/Power you want to run at (-1 <- 0 -> 1)
      */
     public void runLift(double speed) {
@@ -120,5 +91,9 @@ public class BallSubsystem extends SubsystemBase {
       runAdvance(0);
       runAdvanceAutonomously = false;
     }
+
+    // Update SmartDashboard
+    SmartDashboard.putBoolean("Intake Status", this.intakeSensorStatus);
+    SmartDashboard.putBoolean("Output Status", this.outputSensorStatus);
   }
 }

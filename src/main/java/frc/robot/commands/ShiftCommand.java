@@ -8,23 +8,24 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.Constants.DriveShiftPos;
+import frc.robot.subsystems.ShiftSubsystem;
 
-public class TestShooterPos extends InstantCommand {
-  TurretSubsystem ss;
-  double speed;
-  /**
-   * Creates a new TestShooterPos.
-   */
-  public TestShooterPos(TurretSubsystem ss, double speed) {
-    addRequirements(ss);
+// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
+// information, see:
+// https://docs.wpilib.org/en/latest/docs/software/commandbased/convenience-features.html
+public class ShiftCommand extends InstantCommand {
+  private ShiftSubsystem ss;
+  private DriveShiftPos shiftPos;
+  public ShiftCommand(ShiftSubsystem ss, DriveShiftPos pos) {
     this.ss = ss;
-    this.speed = speed;
+    shiftPos = pos;
+    addRequirements(this.ss);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    ss.pan(speed);
+    this.ss.shiftShifter(shiftPos);
   }
 }

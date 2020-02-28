@@ -8,40 +8,40 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.BallSubsystem;
+import frc.robot.Constants;
+import frc.robot.Constants.SolenoidPosition;
+import frc.robot.subsystems.ColorWheelSubsystem;
 
-public class AutoBallRouting extends CommandBase {
+public class WaitForProx extends CommandBase {
+  ColorWheelSubsystem cws;
   /**
-   * Creates a new BallIntake.
+   * Creates a new WaitForProx.
    */
-
-  BallSubsystem ballSubsystem;
-  public AutoBallRouting(BallSubsystem ballSubsystem) {
-    this.ballSubsystem = ballSubsystem;
-    addRequirements(this.ballSubsystem);
-    // Use addRequirements() here to declare subsystem dependencies.
+  public WaitForProx(ColorWheelSubsystem cws) {
+    addRequirements(cws);
+    this.cws = cws;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    ballSubsystem.runAdvance(0.35);
+    cws.setWheelExtension(SolenoidPosition.UP);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    System.out.println("RUNNING!");
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    ballSubsystem.runAdvance(0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return !ballSubsystem.getBallSensorIntake();
+    return !(Math.abs(cws.getProximity() - Constants.IDEAL_PROX_COLOR_SENSOR) > Constants.PROX_SENSOR_TOLERANCE);
   }
 }
