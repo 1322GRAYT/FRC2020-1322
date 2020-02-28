@@ -30,7 +30,7 @@ public class RobotContainer {
   private final AimSubsystem aimSubsystem = new AimSubsystem();
   private final BallSubsystem ballSubsystem = new BallSubsystem();
   private final LiftSubsystem liftSubsystem = new LiftSubsystem();
-  private final DriveSubsystem driveSubsystem = new DriveSubsystem();
+  private final ShiftSubsystem shiftSubsystem = new ShiftSubsystem();
   
   private XboxController driverStick;
   private XboxController auxStick;
@@ -76,8 +76,8 @@ public class RobotContainer {
     /* BEGIN DRIVER STICK BUTTON ASSIGNMENTS */
     driverStick = new XboxController(0);
     // Shifter Command (Y for high gear, X for low gear)
-    new JoystickButton(driverStick, 4).whenPressed(new ShiftCommand(driveSubsystem, DriveShiftPos.HIGH_GEAR));
-    new JoystickButton(driverStick, 1).whenPressed(new ShiftCommand(driveSubsystem, DriveShiftPos.LOW_GEAR));
+    new JoystickButton(driverStick, 4).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
+    new JoystickButton(driverStick, 1).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
 
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
     auxStick = new XboxController(1);

@@ -9,23 +9,23 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.DriveShiftPos;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.ShiftSubsystem;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/latest/docs/software/commandbased/convenience-features.html
 public class ShiftCommand extends InstantCommand {
-  private DriveSubsystem ds;
+  private ShiftSubsystem ss;
   private DriveShiftPos shiftPos;
-  public ShiftCommand(DriveSubsystem ds, DriveShiftPos pos) {
-    this.ds = ds;
+  public ShiftCommand(ShiftSubsystem ss, DriveShiftPos pos) {
+    this.ss = ss;
     shiftPos = pos;
-    addRequirements(this.ds);
+    addRequirements(this.ss);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    this.ds.shiftShifter(shiftPos);
+    this.ss.shiftShifter(shiftPos);
   }
 }
