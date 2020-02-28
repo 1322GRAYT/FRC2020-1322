@@ -94,8 +94,8 @@ public class RobotContainer {
     /* BEGIN DRIVER STICK BUTTON ASSIGNMENTS */
     driverStick = new XboxController(0);
     // Shifter Command (Y for high gear, X for low gear)
-    new JoystickButton(driverStick, 4).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
-    new JoystickButton(driverStick, 1).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
+    new JoystickButton(driverStick, 6).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
+    new JoystickButton(driverStick, 5).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
     /* For Testing Only */
     new JoystickButton(driverStick, 2).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
     //    new JoystickButton(driverStick, 1).whenPressed(new SDRV_RotFindZero(swerveDriveSystem, SwrvMap.RtRr));
@@ -110,8 +110,9 @@ public class RobotContainer {
  
     // Manual Shoot
     new JoystickButton(auxStick, 3).whenPressed(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
-    // Color Wheel Commands (Start for Gain All control, Y to cancel)
+    // Color Wheel Commands (Start for Gain All control)
     new JoystickButton(auxStick, 8).whenPressed(new GainFullColorWheelCtrl(colorWheelSubsystem));
+    new JoystickButton(auxStick, 7).whenPressed(new RetractColorWheel(colorWheelSubsystem));
   }
 
 
