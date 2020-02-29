@@ -23,7 +23,7 @@ public abstract class HolonomicDrivetrainSubsystem extends SubsystemBase {
 
 	public abstract double getGyroAngle();
 
-	public abstract void HolonomicDrv(double forward, double strafe, double rotation);
+	public abstract void HolonomicDrv(double forward, double strafe, double rotation, boolean fieldOriented);
 
 	public boolean isFieldOriented() {
 		return mFieldOriented;

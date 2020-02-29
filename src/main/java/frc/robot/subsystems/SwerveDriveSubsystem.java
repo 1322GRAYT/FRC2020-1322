@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import frc.robot.Constants;
 import frc.robot.SwrvMap;
+import frc.robot.Constants.DriveShiftPos;
+import frc.robot.Constants.SolenoidPosition;
 import frc.robot.calibrations.K_SWRV;
 import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
 import frc.robot.subsystems.SwerveDriveModule.TeRotDirctn;
@@ -14,7 +16,9 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import edu.wpi.first.wpilibj.controller.PIDController;
 
 
@@ -31,11 +35,23 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 	private AHRS mNavX = new AHRS(SPI.Port.kMXP, (byte) 200);
 
+	private PIDController VsSDRV_PID_Long;
+    private PIDController VsSDRV_PID_Lat;
+    private PIDController VsSDRV_PID_Rot;
+
+    private double VeSDRV_r_PwrOutputMinLong = -1;
+    private double VeSDRV_r_PwrOutputMaxLong =  1;
+    private double VeSDRV_r_PwrOutputMinLat  = -1;
+    private double VeSDRV_r_PwrOutputMaxLat  =  1;
+    private double VeSDRV_r_PwrOutputMinRot  = -1;
+    private double VeSDRV_r_PwrOutputMaxRot  =  1;
 
 	private boolean VeSDRV_b_SwrvRotRqstActv;
 	private boolean VeSDRV_b_RZL_Rqst;
-	private boolean VeSDRV_b_RZL_RqstPrev;
+	private boolean VeSDRV_b_RZL_Actv;
 	private boolean VeSDRV_b_RZL_Cmplt;
+	private boolean VeSDRV_b_RZL_FailIntrsv;
+	private Timer   VeSDRV_t_RZL_TmeOutTmrIntrsv = new Timer();
 	
 
 	double[] VaSDRV_r_RotEncdrActRaw     = new double[SwrvMap.NumOfCaddies];
@@ -64,7 +80,13 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	private double VeSDRV_r_PwrLat;
 	private double VeSDRV_r_PwrRot;
 
+  /** SwrvRotZeroNotRun: While True indicates that the Swerve Rotation Angle Zero
+    * Learn has not completed.
+    */
+	private boolean VeSDRV_b_RotZeroLearnNotRun;
 
+	private int     VeTEST_Cnt_TestBrnchCntr;
+	private boolean VeTEST_b_TestInitTrig;
 
 	/*******************************/
 	/* Subsystem Constructor       */
@@ -74,6 +96,18 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 		SwrvDrvMod[SwrvMap.LtRr].getDrvMtr().follow(SwrvDrvMod[SwrvMap.LtFt].getDrvMtr());
 		SwrvDrvMod[SwrvMap.RtRr].getDrvMtr().follow(SwrvDrvMod[SwrvMap.RtFt].getDrvMtr());
+
+		VsSDRV_PID_Long = new PIDController(K_SWRV.KeSWRV_k_CL_PropGx_Long, K_SWRV.KeSWRV_k_CL_IntglGx_Long, K_SWRV.KeSWRV_k_CL_DerivGx_Long);
+		VsSDRV_PID_Lat  = new PIDController(K_SWRV.KeSWRV_k_CL_PropGx_Lat,  K_SWRV.KeSWRV_k_CL_IntglGx_Lat,  K_SWRV.KeSWRV_k_CL_DerivGx_Lat);
+		VsSDRV_PID_Rot  = new PIDController(K_SWRV.KeSWRV_k_CL_PropGx_Rot,  K_SWRV.KeSWRV_k_CL_IntglGx_Rot,  K_SWRV.KeSWRV_k_CL_DerivGx_Rot);
+
+		VeSDRV_r_PwrOutputMinLong = -1;
+		VeSDRV_r_PwrOutputMaxLong =  1;
+		VeSDRV_r_PwrOutputMinLat  = -1;
+		VeSDRV_r_PwrOutputMaxLat  =  1;
+		VeSDRV_r_PwrOutputMinRot  = -1;
+		VeSDRV_r_PwrOutputMaxRot  =  1;
+	
 
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
 		  VaSDRV_r_RotEncdrActRaw[i]    = 0;
@@ -91,8 +125,10 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 	    VeSDRV_b_SwrvRotRqstActv = false;
 		VeSDRV_b_RZL_Rqst        = false;
-		VeSDRV_b_RZL_RqstPrev    = false;
-	    VeSDRV_b_RZL_Cmplt       = false;
+		VeSDRV_b_RZL_Actv        = false;
+		VeSDRV_b_RZL_Cmplt       = false;
+		VeSDRV_b_RZL_FailIntrsv  = false;
+		VeSDRV_t_RZL_TmeOutTmrIntrsv.reset();
 
 		VeSDRV_v_DrvSpdMax  = 0.0;
 		VeSDRV_r_MtrSpdMult = 1.0;
@@ -100,6 +136,11 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		VeSDRV_r_PwrLong = 0.0;
 		VeSDRV_r_PwrLat  = 0.0;
 		VeSDRV_r_PwrRot  = 0.0;
+
+		VeSDRV_b_RotZeroLearnNotRun = false;
+
+		VeTEST_Cnt_TestBrnchCntr = 0;
+		VeTEST_b_TestInitTrig = false;
 	}
 
 
@@ -117,11 +158,14 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
-
-
     /*********************************************/
 	/*     NAV/Gyro Interfaces                   */
 	/*********************************************/
+
+
+	public void resetGyro() {
+		mNavX.reset();
+	}
 
 	public double getGyroAngle() {
 		return (mNavX.getAngle() - getAdjustmentAngle());
@@ -150,12 +194,100 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	@Override
 	public void periodic() {
 	  // This method will be called once per scheduler run
+	  /* Update SmartDashboard with Data */
+
+	  VeTEST_Cnt_TestBrnchCntr = 1;
+	  mngSDRV_RZL_PeriodicIntrsvTask();
+	  mngSDRV_RZL_PeriodicPassiveTask();
+
+	  if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
+	    updateSmartDash();	
+	  }
+	
 	}
 
 
 
+    public void mngSDRV_RZL_PeriodicIntrsvTask() {
+		boolean Le_b_RZL_InitTrig = false;
+		Te_RZL_St Le_e_St_RtFt, Le_e_St_LtFt, Le_e_St_LtRr, Le_e_St_RtRr;
+	   
+		  if (VeSDRV_b_RZL_Rqst == true) {
+			if (VeSDRV_b_RZL_Actv == false) {
+			  VeSDRV_t_RZL_TmeOutTmrIntrsv.reset();
+			  VeSDRV_t_RZL_TmeOutTmrIntrsv.start();
+			  VeTEST_Cnt_TestBrnchCntr = 1;
+			  VeTEST_b_TestInitTrig = true;	
+			  Le_b_RZL_InitTrig = true;
+			  VeSDRV_b_RZL_Actv = true;
+			}
+  
+		  setDrvMtrSpdsZero();
+		  VeTEST_Cnt_TestBrnchCntr = 2;	
+
+		  Le_e_St_RtFt = SwrvDrvMod[SwrvMap.RtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		  Le_e_St_LtFt = SwrvDrvMod[SwrvMap.LtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		  Le_e_St_LtRr = SwrvDrvMod[SwrvMap.LtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
+		  Le_e_St_RtRr = SwrvDrvMod[SwrvMap.RtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);			
+  
+		  if ((Le_e_St_RtFt == Te_RZL_St.Cmplt) && (Le_e_St_LtFt == Te_RZL_St.Cmplt) &&
+			  (Le_e_St_LtRr == Te_RZL_St.Cmplt) && (Le_e_St_RtRr == Te_RZL_St.Cmplt)) {
+			VeSDRV_b_RZL_Cmplt = true;
+			VeTEST_Cnt_TestBrnchCntr = 3;
+		  }
+  
+		  if (VeSDRV_t_RZL_TmeOutTmrIntrsv.get() >= K_SWRV.KeSWRV_t_RZL_TimeOutThrshIntrsv) {
+			VeSDRV_b_RZL_Cmplt = true;
+			VeSDRV_b_RZL_FailIntrsv = true;
+			VeTEST_Cnt_TestBrnchCntr = 4;
+		  }
+
+		}
+		else /*  (VeSDRV_b_RZL_Rqst == false) */ {
+		  VeSDRV_t_RZL_TmeOutTmrIntrsv.stop();
+		  VeSDRV_t_RZL_TmeOutTmrIntrsv.reset();
+		  VeSDRV_b_RZL_Actv = false;	
+		  VeTEST_Cnt_TestBrnchCntr = 5;	
+		  SwrvDrvMod[SwrvMap.RtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+		  SwrvDrvMod[SwrvMap.LtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+		  SwrvDrvMod[SwrvMap.LtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+		  SwrvDrvMod[SwrvMap.RtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
+		}
+  	  }
+
+
+	public void mngSDRV_RZL_PeriodicPassiveTask() {
+	  for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
+		SwrvDrvMod[i].montrRotEncdrZeroOfst();
+	  }		
+	}
+
+
+
+    /**
+     * Control Swerve Drive with 3 PID controllers, one for each of the axes.
+     * @param Le_x_CL_ErrLong The error term (from the input device) for forward movement.
+     * @param Le_x_CL_ErrLat The error term (from the input device) for strafe movement.
+     * @param Le_x_CL_ErrRot The error term (from the input device, generally gyroscope) for rotation.
+     * @param fieldOriented Whether the frame of reference for Forward and Strafe is the field (true) or the robot (false).
+     */
+    public void PID_DrvCntrl(double Le_x_CL_ErrLong, double Le_x_CL_ErrLat, double Le_x_CL_ErrRot, boolean Le_b_FieldOriented){
+		double forward = VsSDRV_PID_Long.calculate(Le_x_CL_ErrLong);
+		double strafe = VsSDRV_PID_Lat.calculate(Le_x_CL_ErrLat);
+		double rotation = VsSDRV_PID_Rot.calculate(Le_x_CL_ErrRot);
+  
+		forward = MathUtil.clamp(forward, VeSDRV_r_PwrOutputMinLong, VeSDRV_r_PwrOutputMaxLong);
+		strafe = MathUtil.clamp(strafe, VeSDRV_r_PwrOutputMinLat, VeSDRV_r_PwrOutputMaxLat);
+		rotation = MathUtil.clamp(rotation, VeSDRV_r_PwrOutputMinRot, VeSDRV_r_PwrOutputMaxRot);
+  
+		HolonomicDrv(forward, strafe, rotation, Le_b_FieldOriented);
+	  }
+  
+
+
+
 	@Override
-	public void HolonomicDrv(double Le_r_PwrLong, double Le_r_PwrLat, double Le_r_PwrRot) {
+	public void HolonomicDrv(double Le_r_PwrLong, double Le_r_PwrLat, double Le_r_PwrRot, boolean Le_b_FieldOriented) {
 		boolean Le_b_RotAngUpdPwrCond;
 
         if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
@@ -180,14 +312,13 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 		VeSDRV_r_PwrLong *= getSpdMult();
 		VeSDRV_r_PwrLat  *= getSpdMult();
-		/*
+		
 		if (isFieldOriented()) {
 			double angleRad = Math.toRadians(getGyroAngle());
 			double temp = VeSDRV_r_PwrLong * Math.cos(angleRad) + VeSDRV_r_PwrLat * Math.sin(angleRad); 
 			VeSDRV_r_PwrLat = -VeSDRV_r_PwrLong * Math.sin(angleRad) + VeSDRV_r_PwrLat * Math.cos(angleRad);
 			VeSDRV_r_PwrLong = temp;
 		}
-		*/
 
 
         /* Process Swerve Drive Inverse Kinematics */
@@ -280,14 +411,8 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		}
 
 		/* Command Target Drive Speeds */
-		setDrvMtrSpd(SwrvMap.RtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.RtFt]);
-		setDrvMtrSpd(SwrvMap.LtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.LtFt]);
-
-		/* Update SmartDashboard with Data */
-        if (K_SWRV.KeSWRV_b_DebugEnbl == true)  {
-		    updateSmartDash();	
-        }
-
+		setDrvMtrSpdByBank(SwrvMap.RtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.RtFt]);
+		setDrvMtrSpdByBank(SwrvMap.LtSd, VaSDRV_v_DrvSpdCalcCnvrtd[SwrvMap.LtFt]);
 	}
 
 
@@ -507,15 +632,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}    
 
 
-
-	public void haltSwerveDrive(){
-		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-			SwrvDrvMod[i].setRotMtrPwr(0);
-            SwrvDrvMod[i].setDrvMtrPwr(0);
-		}
-	}
-
-
 	public void runSwerveCaddyAtPwr(int Le_i_SwrvBnkIdx, TeMtrDirctn Le_e_MtrDirctn, double Le_r_PwrLvl) {
 
 		double Le_r_MtrDirctnSclr = (Le_e_MtrDirctn == TeMtrDirctn.Rwd ? -1 : 1); 
@@ -538,62 +654,6 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		}
 	}
 	
-
-	public double getSwerveCaddyAng(int Le_i_SwrvMod) {
-	    return(SwrvDrvMod[Le_i_SwrvMod].getRotActAngRaw());
-	}
-
-
-	public boolean getSDRV_RZL_Rqst() {
-		return (VeSDRV_b_RZL_Rqst);
-		}
-	  
-
-	public void setSDRV_RZL_Rqst(boolean Le_b_RZL_Rqst) {
-	    VeSDRV_b_RZL_Rqst = Le_b_RZL_Rqst;
-	}
-
-
-    public boolean getSDRV_RZL_Cmplt() {
-	  return (VeSDRV_b_RZL_Cmplt);
-	}
-
-	public void setSDRV_RZL_Cmplt(boolean Le_b_RZL_Cmplt) {
-	  VeSDRV_b_RZL_Cmplt = Le_b_RZL_Cmplt;
-	}
-
-
-    public void mngSDRV_RZL_SchedTask() {
-	  boolean Le_b_RZL_InitTrig = false;
-	  Te_RZL_St Le_e_St_RtFt, Le_e_St_LtFt, Le_e_St_LtRr, Le_e_St_RtRr;
-	 
-		if (VeSDRV_b_RZL_Rqst == true) {
-		  if (VeSDRV_b_RZL_RqstPrev = false) {
-			Le_b_RZL_InitTrig = true;
-		  }
-
-		setDrvMtrSpdsZero();
-
-		Le_e_St_RtFt = SwrvDrvMod[SwrvMap.RtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
-		Le_e_St_LtFt = SwrvDrvMod[SwrvMap.LtFt].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
-		Le_e_St_LtRr = SwrvDrvMod[SwrvMap.LtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);
-		Le_e_St_RtRr = SwrvDrvMod[SwrvMap.RtRr].learnRotEncdrZeroOfst(Le_b_RZL_InitTrig);			
-
-		if ((Le_e_St_RtFt == Te_RZL_St.Cmplt) && (Le_e_St_LtFt == Te_RZL_St.Cmplt) &&
-		    (Le_e_St_LtRr == Te_RZL_St.Cmplt) && (Le_e_St_RtRr == Te_RZL_St.Cmplt)) {
-		  VeSDRV_b_RZL_Cmplt = true;
-		}
-	  }
-	  else {
-        SwrvDrvMod[SwrvMap.RtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
-        SwrvDrvMod[SwrvMap.LtFt].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
-        SwrvDrvMod[SwrvMap.LtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
-        SwrvDrvMod[SwrvMap.RtRr].setRotEncdrZeroLearnSt(Te_RZL_St.Inactv);
-	  }
-
-	  VeSDRV_b_RZL_RqstPrev = VeSDRV_b_RZL_Rqst;
-	}
-   
 
 	public void sweepSwerveCaddyToAng(int Le_i_SwrvModIdx, TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
 		double Le_r_RotDirctnSclr = 1;
@@ -619,7 +679,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
 		Le_Deg_HdgAngErr = Math.max(Le_Deg_HdgAngErr, -1);
-		HolonomicDrv(Le_r_PwrLvl, 0, 0);
+		HolonomicDrv(Le_r_PwrLvl, 0, 0, false);
 	}
 
 
@@ -627,7 +687,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
 		Le_Deg_HdgAngErr = Math.max(Le_Deg_HdgAngErr, -1);
-		HolonomicDrv(Le_r_PwrLvl, 0, Le_Deg_HdgAngErr);
+		HolonomicDrv(Le_r_PwrLvl, 0, Le_Deg_HdgAngErr, false);
 	}
 
 
@@ -636,7 +696,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
 		Le_Deg_HdgAngErr = Math.max(Le_Deg_HdgAngErr, -1);
-		HolonomicDrv(0, Le_r_PwrLvl, 0);
+		HolonomicDrv(0, Le_r_PwrLvl, 0, false);
 	}
 
 
@@ -644,7 +704,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		double Le_Deg_HdgAngErr = ((Le_Deg_HdgAng - mNavX.getYaw()) / 180)*10;
 		Le_Deg_HdgAngErr = Math.min(Le_Deg_HdgAngErr, 1);
 		Le_Deg_HdgAngErr = Math.max(Le_Deg_HdgAngErr, -1);
-		HolonomicDrv(0, Le_r_PwrLvl, Le_Deg_HdgAngErr);
+		HolonomicDrv(0, Le_r_PwrLvl, Le_Deg_HdgAngErr, false);
 	}
 
 
@@ -657,7 +717,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		  Le_r_RotPwr = Le_r_PwrLvl;
 		Le_r_RotPwr = Math.min(Le_r_RotPwr, 1);
 		Le_r_RotPwr = Math.max(Le_r_RotPwr, -1);
-		HolonomicDrv(0, 0, Le_r_RotPwr);
+		HolonomicDrv(0, 0, Le_r_RotPwr, false);
 	}
 
 
@@ -667,7 +727,7 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 		Le_Deg_RotErr = Math.max(Le_Deg_RotErr, -1);
 		if (Math.abs(Le_Deg_RotErr) < 5 )
 		  Le_r_PwrLvl *= 0.25;
-		HolonomicDrv(0, 0, Le_r_PwrLvl);
+		HolonomicDrv(0, 0, Le_r_PwrLvl, false);
 	}
 
 
@@ -680,12 +740,40 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
+	
+    /*************************************************/
+	/*     Subsystem Data Interfaces                 */
+	/*************************************************/
 
-/*
-	public double calcDrvPosErr(double Le_l_DrvDistTgtInches) {
-		return Le_l_DrvDistTgtInches - SwrvDrvMod[SwrvMap.RtFt].getDrvDist();
+
+	public int getDrvCaddyEncdrCnts() {
+		return((int) Math.round(SwrvDrvMod[SwrvMap.RtFt].getDrvEncdrCntsRel()));
+    }
+  
+	public double getDrvCaddyInchesPerEncdrCnts(int Le_Cnts_DrvEncdrCnts, DriveShiftPos Le_e_DrvSlctdGr) {
+	  double Le_l_DrvWhlDistInches;
+	  Le_l_DrvWhlDistInches = SwrvDrvMod[SwrvMap.RtFt].getDrvInchesPerEncdrCnts(Le_Cnts_DrvEncdrCnts, Le_e_DrvSlctdGr); 
+	  return(Le_l_DrvWhlDistInches);
 	}
-*/
+
+	public int getDrvCaddyEncdrCntsPerInches(double Le_l_DrvWhlDistInches, DriveShiftPos Le_e_DrvSlctdGr) {
+	  int Le_Cnts_DrvEncdr;
+	  Le_Cnts_DrvEncdr = SwrvDrvMod[SwrvMap.RtFt].getDrvEncdrCntsPerInches(Le_l_DrvWhlDistInches, Le_e_DrvSlctdGr);
+	  return(Le_Cnts_DrvEncdr);  
+	}
+	
+
+	public double getDrvCaddyDistTravelled(DriveShiftPos Le_e_DrvSlctdGr) {
+	  double Le_l_DrvWhlDistInches;
+	  Le_l_DrvWhlDistInches =  SwrvDrvMod[SwrvMap.RtFt].getDrvDistTravelled(Le_e_DrvSlctdGr);
+	  return(Le_l_DrvWhlDistInches);
+	}
+
+
+	public double calcDrvCaddyDistErr(double Le_l_DrvDistTgtInches, DriveShiftPos Le_e_DrvSlctdGr) {
+		return(Le_l_DrvDistTgtInches - SwrvDrvMod[SwrvMap.RtFt].getDrvDistTravelled(Le_e_DrvSlctdGr));
+	}
+
 
 	public void cmndDrvsToEncdrPos(double Le_r_EncdrPos) {
 		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
@@ -694,12 +782,28 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
+	public void haltSwerveDrive(){
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+			SwrvDrvMod[i].setRotMtrPwr(0);
+            SwrvDrvMod[i].setDrvMtrPwr(0);
+		}
+	}
+
 	@Override
 	public void stopDrvMtrs() {
 		for (int i = 0; i < SwrvMap.NumOfBanks; i++ ) {
-			setDrvMtrSpd(i, 0);
+			setDrvMtrSpdByBank(i, 0);
 		}
 	}
+
+	public void setDrvMtrSpdsZero() {
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
+		  SwrvDrvMod[i].setDrvMtrPwr(0);
+		  SwrvDrvMod[i].setDrvMtrPwr(0);
+		  SwrvDrvMod[i].setDrvMtrPwr(0);
+		  SwrvDrvMod[i].setDrvMtrPwr(0);
+		}
+	  }
 
 
 	public void resetDrvEncdrs() {
@@ -721,32 +825,37 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 	}
 
 
+	public double getSwerveCaddyAng(int Le_i_SwrvMod) {
+	    return(SwrvDrvMod[Le_i_SwrvMod].getRotActAngRaw());
+	}
 
 
-    /*************************************************/
-	/*     Subsystem Data Interfaces                 */
-	/*************************************************/
+	public boolean getSDRV_RZL_Rqst() {
+		return (VeSDRV_b_RZL_Rqst);
+		}
+	  
 
-	
+	public void setSDRV_RZL_Rqst(boolean Le_b_RZL_Rqst) {
+	    VeSDRV_b_RZL_Rqst = Le_b_RZL_Rqst;
+	}
+
+
+    public boolean getSDRV_RZL_Cmplt() {
+	  return (VeSDRV_b_RZL_Cmplt);
+	}
+
+	public void setSDRV_RZL_Cmplt(boolean Le_b_RZL_Cmplt) {
+	  VeSDRV_b_RZL_Cmplt = Le_b_RZL_Cmplt;
+	}
+
+
 	public boolean getRotZeroDtctd(int Le_i_SwrvModIdx) {
 	     return(SwrvDrvMod[Le_i_SwrvModIdx].getRotEncdrZeroDtctd());
 	}
 
 
-	public void setDrvMtrSpdsZero() {
-	  for (int i = 0; i < SwrvMap.NumOfCaddies; i++) {
-		SwrvDrvMod[i].setDrvMtrPwr(0);
-		SwrvDrvMod[i].setDrvMtrPwr(0);
-		SwrvDrvMod[i].setDrvMtrPwr(0);
-		SwrvDrvMod[i].setDrvMtrPwr(0);
-	  }
-    }
 
-
-
-
-
-    public void setDrvMtrSpd(int Le_i_MtrBnk, double Le_r_DrvPwr) {
+    public void setDrvMtrSpdByBank(int Le_i_MtrBnk, double Le_r_DrvPwr) {
 		TeMtrDirctn Le_e_DrvMtrDirctn;
 		double Le_r_DirctnSclr;
 		
@@ -778,52 +887,170 @@ public class SwerveDriveSubsystem extends HolonomicDrivetrainSubsystem {
 
 
 
+    /*************************************************/
+	/*  Drive PID Methods for configuring PID        */
+	/*************************************************/
+	// All the PID System methods. 
+	
+    public void setForwardSetpoint(double setpoint){
+		VsSDRV_PID_Long.setSetpoint(setpoint);
+	  }
+	  public void setStrafeSetpoint(double setpoint){
+		VsSDRV_PID_Lat.setSetpoint(setpoint);
+	  }
+	  public void setRotationSetpoint(double setpoint){
+		VsSDRV_PID_Rot.setSetpoint(setpoint);
+	  }
+	  public void setForwardTolerance(double positionTolerance, double velocityTolerance){
+		VsSDRV_PID_Long.setTolerance(positionTolerance, velocityTolerance);
+	  }
+	  public void setStrafeTolerance(double positionTolerance, double velocityTolerance){
+		VsSDRV_PID_Lat.setTolerance(positionTolerance, velocityTolerance);
+	  }
+	  public void setRotationTolerance(double positionTolerance, double velocityTolerance){
+		VsSDRV_PID_Rot.setTolerance(positionTolerance, velocityTolerance);
+	  }
+	  public void setForwardWraparoundInputRange(double min, double max){
+		VsSDRV_PID_Long.enableContinuousInput(min, max);
+	  }
+	  public void setStrafeWraparoundInputRange(double min, double max){
+		VsSDRV_PID_Lat.enableContinuousInput(min, max);
+	  }
+	  public void setRotationWraparoundInputRange(double min, double max){
+		VsSDRV_PID_Rot.enableContinuousInput(min, max);
+	  }
+	  public void setForwardAccumulationRange(double min, double max){
+		VsSDRV_PID_Long.setIntegratorRange(min, max);
+	  }
+	  public void setStrafeAccumulationRange(double min, double max){
+		VsSDRV_PID_Lat.setIntegratorRange(min, max);
+	  }
+	  public void setRotationAccumulationRange(double min, double max){
+		VsSDRV_PID_Rot.setIntegratorRange(min, max);
+	  } 
+	  public void setForwardOutputRange(double minOutput, double maxOutput){
+		VeSDRV_r_PwrOutputMinLong = minOutput;
+		VeSDRV_r_PwrOutputMaxLong = maxOutput;
+	  }
+	  public void setStrafeOutputRange(double minOutput, double maxOutput){
+		VeSDRV_r_PwrOutputMinLat = minOutput;
+		VeSDRV_r_PwrOutputMaxLat = maxOutput;
+	  }
+	  public void setRotationOutputRange(double minOutput, double maxOutput) {
+		VeSDRV_r_PwrOutputMinRot = minOutput;
+		VeSDRV_r_PwrOutputMaxRot = maxOutput;
+	  }
+	  public double getForwardErrorDerivative(){
+		return VsSDRV_PID_Long.getVelocityError();
+	  }
+	  public double getStrafeErrorDerivative(){
+		return VsSDRV_PID_Lat.getVelocityError();
+	  }
+	  public double getRotationErrorDerivative(){
+		return VsSDRV_PID_Rot.getVelocityError();
+	  }
+	  public boolean forwardAtSetpoint(){
+		return VsSDRV_PID_Long.atSetpoint();
+	  }
+	  public boolean strafeAtSetpoint(){
+		return VsSDRV_PID_Lat.atSetpoint();
+	  }
+	  public boolean rotationAtSetpoint(){
+		return VsSDRV_PID_Rot.atSetpoint();
+	  }
+	  /**
+	   * Clear all I accumulation, disable continuous input, and set all 
+	   * setpoints to 0.
+	   */
+	  public void resetPID(){
+		// clear I accumulation
+		VsSDRV_PID_Long.reset();
+		VsSDRV_PID_Lat.reset();
+		VsSDRV_PID_Rot.reset();
+  
+		// reset to noncontinuous input
+		VsSDRV_PID_Long.disableContinuousInput();
+		VsSDRV_PID_Lat.disableContinuousInput();
+		VsSDRV_PID_Rot.disableContinuousInput();
+  
+		// set all setpoints to 0
+		VsSDRV_PID_Long.setSetpoint(0);
+		VsSDRV_PID_Lat.setSetpoint(0);
+		VsSDRV_PID_Rot.setSetpoint(0);
+  
+		// set all I accumulation ranges to defaults
+		VsSDRV_PID_Long.setIntegratorRange(-1.0, 1.0);
+		VsSDRV_PID_Lat.setIntegratorRange(-1.0,1.0);
+		VsSDRV_PID_Rot.setIntegratorRange(-1.0, 1.0);
+  
+		VsSDRV_PID_Long.setTolerance(0.05, Double.POSITIVE_INFINITY);
+		VsSDRV_PID_Lat.setTolerance(0.05, Double.POSITIVE_INFINITY);
+		VsSDRV_PID_Rot.setTolerance(0.05, Double.POSITIVE_INFINITY);
+  
+		VeSDRV_r_PwrOutputMinLong = -1;
+		VeSDRV_r_PwrOutputMaxLong = 1;
+		VeSDRV_r_PwrOutputMinLat = -1;
+		VeSDRV_r_PwrOutputMaxLat = 1;
+		VeSDRV_r_PwrOutputMinRot = -1;
+		VeSDRV_r_PwrOutputMaxRot = 1;
+	  }
+  
+
+
 
     /*************************************************/
 	/*     Subsystem Instrumenation Display          */
 	/*************************************************/
 
 	private void updateSmartDash() {
-	/* Print to SmartDashboard */
-
-	SmartDashboard.putNumber("Cntrlr Pwr Long " , VeSDRV_r_PwrLong);
-	SmartDashboard.putNumber("Cntrlr Pwr Lat " ,  VeSDRV_r_PwrLat);
-	SmartDashboard.putNumber("Cntrlr Pwr Rot " ,  VeSDRV_r_PwrRot);
-
-	SmartDashboard.putBoolean("RZL Rqst " , VeSDRV_b_RZL_Rqst);
-	SmartDashboard.putBoolean("RZL Cmplt " , VeSDRV_b_RZL_Cmplt);
-
-	for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
-
-	   SmartDashboard.putString("RZL St " + i ,            SwrvDrvMod[i].getRotEncdrZeroLearnSt().toString());
-      
-
-	   SmartDashboard.putNumber("Calc Ang Raw " + i ,      VaSDRV_Deg_RotAngCalcRaw[i]);
-	   SmartDashboard.putNumber("Calc Ang Cnvrtd " + i ,   VaSDRV_Deg_RotAngCalcCnvrtd[i]);
-	   SmartDashboard.putNumber("Calc Ang Ltch " + i ,     VaSDRV_Deg_RotAngCalcLtch[i]);
-
-       SmartDashboard.putNumber("Tgt Ang Raw " + i ,       VaSDRV_Deg_RotAngTgt[i]);	   
-	   SmartDashboard.putNumber("Tgt Encdr Raw " + i ,     VaSDRV_r_RotEncdrTgt[i]);
-	   SmartDashboard.putNumber("Tgt Encdr Corr " + i ,    VaSDRV_r_RotEncdrTgtCorr[i]);
-
-	   SmartDashboard.putNumber("Act Encdr Raw " + i ,     VaSDRV_r_RotEncdrActRaw[i]);
-	   SmartDashboard.putNumber("Act Encdr Corr " + i ,    VaSDRV_r_RotEncdrActCorr[i]); 
-	   SmartDashboard.putNumber("Act Ang Raw " + i ,       VaSDRV_Deg_RotAngActRaw[i]);
-	   SmartDashboard.putNumber("Act Ang Norm " + i ,      VaSDRV_Deg_RotAngActNorm[i]);
-	   SmartDashboard.putNumber("Act Ang Cnvrtd " + i ,    VaSDRV_Deg_RotAngActCnvrtd[i]);
-
-       SmartDashboard.putNumber("Rot Zero Ofst " + i ,     SwrvDrvMod[i].getRotEncdrZeroOfst());
-       SmartDashboard.putNumber("Rot Mtr Cur " + i ,       SwrvDrvMod[i].getRotMtrCurr());
+		/* Print to SmartDashboard */
 	
-	   SmartDashboard.putNumber("Tgt Spd Raw " + i ,       VaSDRV_v_DrvSpdCalcRaw[i]);
-	   SmartDashboard.putNumber("Tgt Spd Cnvrtd " + i ,    VaSDRV_v_DrvSpdCalcCnvrtd[i]);
-       SmartDashboard.putNumber("Drv Encdr Cnts " + i ,    SwrvDrvMod[i].getDrvEncdrDelt());	   
-	   SmartDashboard.putString("Drv Mtr Dir " + i ,       SwrvDrvMod[i].getDrvMtrDirctn().toString());
-	   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
-	   
-	   }
+		SmartDashboard.putNumber("Cntrlr Pwr Long " , VeSDRV_r_PwrLong);
+		SmartDashboard.putNumber("Cntrlr Pwr Lat " ,  VeSDRV_r_PwrLat);
+		SmartDashboard.putNumber("Cntrlr Pwr Rot " ,  VeSDRV_r_PwrRot);
+	
+		SmartDashboard.putBoolean("RZL Rqst " , VeSDRV_b_RZL_Rqst);
+		SmartDashboard.putBoolean("RZL Actv " , VeSDRV_b_RZL_Actv);
+		SmartDashboard.putBoolean("RZL Cmplt " , VeSDRV_b_RZL_Cmplt);
+		SmartDashboard.putBoolean("RZL Fail Intrsv " , VeSDRV_b_RZL_FailIntrsv);
 
+		SmartDashboard.putNumber("Test Branch " , VeTEST_Cnt_TestBrnchCntr);
+		SmartDashboard.putBoolean("Test Init ", VeTEST_b_TestInitTrig);
+
+		for (int i = 0; i < SwrvMap.NumOfCaddies; i++)  {
+	
+		   SmartDashboard.putString("RZL St " + i ,            SwrvDrvMod[i].getRotEncdrZeroLearnSt().toString());
+		   SmartDashboard.putNumber("RZL Cntr " + i ,          SwrvDrvMod[i].getRotEncdrZeroLearnCntr());
+	
+		   SmartDashboard.putNumber("Calc Ang Raw " + i ,      VaSDRV_Deg_RotAngCalcRaw[i]);
+		   SmartDashboard.putNumber("Calc Ang Cnvrtd " + i ,   VaSDRV_Deg_RotAngCalcCnvrtd[i]);
+		   SmartDashboard.putNumber("Calc Ang Ltch " + i ,     VaSDRV_Deg_RotAngCalcLtch[i]);
+	
+		   SmartDashboard.putNumber("Tgt Ang Raw " + i ,       VaSDRV_Deg_RotAngTgt[i]);	   
+		   SmartDashboard.putNumber("Tgt Encdr Raw " + i ,     VaSDRV_r_RotEncdrTgt[i]);
+		   SmartDashboard.putNumber("Tgt Encdr Corr " + i ,    VaSDRV_r_RotEncdrTgtCorr[i]);
+	
+		   SmartDashboard.putNumber("Act Encdr Raw " + i ,     VaSDRV_r_RotEncdrActRaw[i]);
+		   SmartDashboard.putNumber("Act Encdr Corr " + i ,    VaSDRV_r_RotEncdrActCorr[i]); 
+		   SmartDashboard.putNumber("Act Ang Raw " + i ,       VaSDRV_Deg_RotAngActRaw[i]);
+		   SmartDashboard.putNumber("Act Ang Norm " + i ,      VaSDRV_Deg_RotAngActNorm[i]);
+		   SmartDashboard.putNumber("Act Ang Cnvrtd " + i ,    VaSDRV_Deg_RotAngActCnvrtd[i]);
+	
+		   SmartDashboard.putNumber("Rot Zero Ofst " + i ,     SwrvDrvMod[i].getRotEncdrZeroOfst());
+		   SmartDashboard.putNumber("Rot Mtr Cur " + i ,       SwrvDrvMod[i].getRotMtrCurr());
+		
+		   SmartDashboard.putNumber("Tgt Spd Raw " + i ,       VaSDRV_v_DrvSpdCalcRaw[i]);
+		   SmartDashboard.putNumber("Tgt Spd Cnvrtd " + i ,    VaSDRV_v_DrvSpdCalcCnvrtd[i]);
+		   SmartDashboard.putNumber("Drv Encdr Cnts " + i ,    SwrvDrvMod[i].getDrvEncdrCntsRel());	   
+		   SmartDashboard.putString("Drv Mtr Dir " + i ,       SwrvDrvMod[i].getDrvMtrDirctn().toString());
+		   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
+		   
+		}
+	
 	}
+	
+
+
 
 }
 

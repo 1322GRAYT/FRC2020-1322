@@ -17,7 +17,7 @@ import frc.robot.subsystems.VisionSubsystem;
 public class AutoAim extends CommandBase {
   private VisionSubsystem visionSubsystem;
   private AimSubsystem ballTurret;
-  double XCorrect = 0,YCorrect = 3;
+  double XCorrect = 0, YCorrect = -2;
 
   /**
    * Creates a new AutoAim.
@@ -27,8 +27,8 @@ public class AutoAim extends CommandBase {
     this.ballTurret = ballTurret;
     this.visionSubsystem = visionSubsystem;
     SmartDashboard.putBoolean("Auto Control", false);
-    SmartDashboard.putNumber("Aim X Correct", 0);
-    SmartDashboard.putNumber("Aim Y Correct", 3);
+    SmartDashboard.putNumber("Aim X Correct", XCorrect);
+    SmartDashboard.putNumber("Aim Y Correct", YCorrect);
   }
 
   // Called when the command is initially scheduled.
@@ -47,8 +47,8 @@ public class AutoAim extends CommandBase {
   Timer timeoutTimer = new Timer();
   @Override
   public void execute() {
-    XCorrect = SmartDashboard.getNumber("Aim X Correct", 0);
-    YCorrect = SmartDashboard.getNumber("Aim Y Correct", 3);
+    XCorrect = SmartDashboard.getNumber("Aim X Correct", XCorrect);
+    YCorrect = SmartDashboard.getNumber("Aim Y Correct", YCorrect);
     var xError = visionSubsystem.getXOffset() + XCorrect;
     var yError = visionSubsystem.getYOffset() + YCorrect;
     var targetSeen = visionSubsystem.hasTarget();

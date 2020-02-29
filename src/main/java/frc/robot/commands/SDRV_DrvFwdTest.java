@@ -7,7 +7,6 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.SwerveDriveModule;
 import frc.robot.subsystems.SwerveDriveSubsystem;
 import frc.robot.subsystems.SwerveDriveModule.TeMtrDirctn;
 import edu.wpi.first.wpilibj2.command.CommandBase;

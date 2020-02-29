@@ -15,7 +15,7 @@ import frc.robot.Constants.DriveShiftPos;
 
 public class ShiftSubsystem extends SubsystemBase {
   private DoubleSolenoid shifterSolenoid;
-  private DriveShiftPos  selectedGearRatio;
+  private DriveShiftPos  selectedGear;
 
 
   public ShiftSubsystem() {
@@ -23,8 +23,8 @@ public class ShiftSubsystem extends SubsystemBase {
   }
 
   public void shiftShifter(Constants.DriveShiftPos pos) {
-    selectedGearRatio = pos;
-    if(selectedGearRatio == DriveShiftPos.HIGH_GEAR) {
+    selectedGear = pos;
+    if(selectedGear == DriveShiftPos.HIGH_GEAR) {
       this.shifterSolenoid.set(Value.kForward);
     } else {
       this.shifterSolenoid.set(Value.kReverse);
@@ -32,8 +32,8 @@ public class ShiftSubsystem extends SubsystemBase {
   }
 
 
-  public DriveShiftPos getSelectedGearRatio(ShiftSubsystem shiftSubsystem) {
-    return (selectedGearRatio);
+  public DriveShiftPos getSelectedGear() {
+    return (selectedGear);
   }
 
 

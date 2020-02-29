@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.calibrations.K_SWRV;
 import frc.robot.Constants.DriveShiftPos;
-import frc.robot.subsystems.ShiftSubsystem;
+
 
 
 public class SwerveDriveModule extends SubsystemBase {
@@ -66,10 +66,13 @@ public class SwerveDriveModule extends SubsystemBase {
   private double    Me_Deg_RZL_AngSwp;
   private double    Me_Deg_RZL_AngTgt;
   private double    Me_r_RZL_Pwr;
-  private Timer     Me_t_RZL_DtctTmr = new Timer();
+  private Timer     Me_t_RZL_DtctTmrIntrsv  = new Timer();
+  private Timer     Me_t_RZL_DtctTmrPassive = new Timer();
+  private int       Me_Cnt_RZL_PassiveUpd;
 
   /* Drive Motor Data */
-  private double Me_r_DrvEncdrZeroPstn;
+  private double Me_Cnt_DrvEncdrZeroPstn;
+  private boolean Me_b_DrvMtrInverted;
   private TeMtrDirctn Me_e_DrvMtrDirctn;
   private boolean Me_b_DrvMtrDirctnUpdInhb;
   private boolean Me_b_DrvMtrDirctnUpdTrig;
@@ -96,9 +99,13 @@ public class SwerveDriveModule extends SubsystemBase {
     Me_Deg_RZL_AngSwp = 0;
     Me_Deg_RZL_AngTgt = 0;
     Me_r_RZL_Pwr = 0;
-    Me_t_RZL_DtctTmr.reset();
+    Me_t_RZL_DtctTmrIntrsv.reset();
+    Me_t_RZL_DtctTmrPassive.reset();
+    Me_Cnt_RZL_PassiveUpd = 0;
+
     
-    Me_r_DrvEncdrZeroPstn = Ms_h_DrvMtr.getSelectedSensorPosition();
+    Me_Cnt_DrvEncdrZeroPstn = Ms_h_DrvMtr.getSelectedSensorPosition();
+    Me_b_DrvMtrInverted = false;
     Me_e_DrvMtrDirctn = TeMtrDirctn.Fwd;
     Me_b_DrvMtrDirctnUpdInhb = false;
     Me_b_DrvMtrDirctnUpdTrig = false;
@@ -132,7 +139,8 @@ public class SwerveDriveModule extends SubsystemBase {
     /* Drive Control PID Controller Configurations */
     /*****************************************************************/
     Ms_h_DrvMtr.configFactoryDefault();
-    Ms_h_DrvMtr.setInverted(TalonFXInvertType.CounterClockwise);
+    Ms_h_DrvMtr.setInverted(false);
+//  Ms_h_DrvMtr.setInverted(TalonFXInvertType.CounterClockwise);
     Ms_h_DrvMtr.setSensorPhase(false);
 
     // set PID coefficients
@@ -153,10 +161,8 @@ public class SwerveDriveModule extends SubsystemBase {
     Ms_h_DrvMtr.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
     // Set amperage limits
-    Ms_h_DrvMtr
-        .configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxPri, 15, 0.5));
-    Ms_h_DrvMtr
-        .configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxSec, 25, 1.0));
+    Ms_h_DrvMtr.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxPri, 30, 0.5));
+    Ms_h_DrvMtr.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, K_SWRV.KeSWRV_I_DrvDrvrLmtMaxSec, 30, 1.0));
     // Ms_h_DrvMtr.setCANTimeout(K_SWRV.KeSWRV_t_DrvCAN_TmeOut);
 
   }
@@ -421,13 +427,13 @@ public class SwerveDriveModule extends SubsystemBase {
       Me_Deg_RZL_AngSwp = K_SWRV.KeSWRV_Deg_RZL_AngSwpCourse;
       Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit + Me_Deg_RZL_AngSwp;
       Me_r_RZL_Pwr = K_SWRV.KeSWRV_r_RZL_PwrSwpCourse;
-      Me_t_RZL_DtctTmr.reset(); 
+      Me_t_RZL_DtctTmrIntrsv.reset(); 
 
       /* **Zero Position Sensor Detected - Goto Zero Detected State** */
       if (getRotEncdrZeroDtctd() == true) {
         Me_e_RZL_St = Te_RZL_St.ZeroDtct;
         sweepCaddyToAng(TeRotDirctn.CW, 0.0);
-        Me_t_RZL_DtctTmr.start();
+        Me_t_RZL_DtctTmrIntrsv.start();
       }
       else {
       Me_e_RZL_St = Te_RZL_St.SwpCW;
@@ -440,7 +446,7 @@ public class SwerveDriveModule extends SubsystemBase {
       if (getRotEncdrZeroDtctd() == true) {
         Me_e_RZL_St = Te_RZL_St.ZeroDtct;
         sweepCaddyToAng(TeRotDirctn.CW, 0.0);
-        Me_t_RZL_DtctTmr.start();
+        Me_t_RZL_DtctTmrIntrsv.start();
       }
       else if (getRotActAngRaw() >= Me_Deg_RZL_AngTgt) {
         Me_e_RZL_St = Te_RZL_St.SwpCCW;
@@ -457,7 +463,7 @@ public class SwerveDriveModule extends SubsystemBase {
       if (getRotEncdrZeroDtctd() == true) {
         Me_e_RZL_St = Te_RZL_St.ZeroDtct;
         sweepCaddyToAng(TeRotDirctn.CCW, 0.0);
-        Me_t_RZL_DtctTmr.start();
+        Me_t_RZL_DtctTmrIntrsv.start();
       }
       else if (getRotActAngRaw() <= Me_Deg_RZL_AngTgt) {
         Me_e_RZL_St = Te_RZL_St.SwpCW;
@@ -472,7 +478,7 @@ public class SwerveDriveModule extends SubsystemBase {
     else if (Me_e_RZL_St == Te_RZL_St.ZeroDtct) {
       /* **Zero Position Sensor Still Detected - Goto Zero Detected State** */
       if (getRotEncdrZeroDtctd() == true) {
-        if(Me_t_RZL_DtctTmr.get() > K_SWRV.KeSWRV_t_RZL_ZeroDtctThrsh) {
+        if(Me_t_RZL_DtctTmrIntrsv.get() > K_SWRV.KeSWRV_t_RZL_ZeroDtctThrshIntrsv) {
           Me_e_RZL_St = Te_RZL_St.ZeroCptr;          
         }
         else {
@@ -490,7 +496,7 @@ public class SwerveDriveModule extends SubsystemBase {
     }    
     /* **Zero Captured State** */
     else if (Me_e_RZL_St == Te_RZL_St.ZeroCptr) {
-      resetRotEncdr();
+      resetRotEncdrZeroOfst();
       Me_e_RZL_St = Te_RZL_St.Cmplt;
     }
     /* **Zero Captured State** */
@@ -502,14 +508,6 @@ public class SwerveDriveModule extends SubsystemBase {
   return (Me_e_RZL_St);
   }
 
-
-  public Te_RZL_St getRotEncdrZeroLearnSt() {
-    return (Me_e_RZL_St);
-  }
-
-  public void setRotEncdrZeroLearnSt(Te_RZL_St Le_e_RZL_St) {
-    Me_e_RZL_St = Le_e_RZL_St;
-  }
 
 
 /**
@@ -524,7 +522,42 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
   if (Le_e_RotDirctn == TeRotDirctn.CCW)
     Le_r_RotDirctnSclr = -1;
   setRotMtrPwr(Le_r_PwrLvl * Le_r_RotDirctnSclr);
+} {
+
 }
+
+
+
+public void montrRotEncdrZeroOfst() {  
+  if (getRotEncdrZeroDtctd() == true) {
+    Me_t_RZL_DtctTmrPassive.start();
+  }
+  else {
+    Me_t_RZL_DtctTmrPassive.stop();
+    Me_t_RZL_DtctTmrPassive.reset();
+  }
+
+  if (Me_t_RZL_DtctTmrPassive.get() >= K_SWRV.KeSWRV_t_RZL_ZeroDtctThrshIntrsv) {
+    resetRotEncdrZeroOfst();
+    Me_Cnt_RZL_PassiveUpd += 1;
+  }
+}
+
+
+public Te_RZL_St getRotEncdrZeroLearnSt() {
+  return (Me_e_RZL_St);
+}
+
+
+public void setRotEncdrZeroLearnSt(Te_RZL_St Le_e_RZL_St) {
+  Me_e_RZL_St = Le_e_RZL_St;
+}
+
+
+public int getRotEncdrZeroLearnCntr() {
+  return (Me_Cnt_RZL_PassiveUpd);
+}
+
 
 
 
@@ -544,32 +577,55 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
   }
 
 
+  /**
+    * Method: getDriveInverted - Swerve Drive System: Sets the direction of the Drive Motor Speed
+    * direction.
+    * As of 01/06/20 this is never called, so all driveInverted remain in default, false state.
+    * @return  Me_b_DrvMtrInverted   ( boolean: Drive Motor Speed Direction Inverted )
+    */
+  public boolean getDriveInverted() {
+    return(Me_b_DrvMtrInverted);
+  }
+
+
+  /**
+    * Method: setDriveInverted - Swerve Drive System: Gets the direction of the Drive Motor Speed
+    * direction.
+    * As of 01/06/20 this is never called, so all driveInverted remain in default, false state.
+    * @param Le_b_DrvMtrInverted   ( boolean: Drive Motor Speed Direction Inverted )
+    */
+    public void setDriveInverted(boolean Le_b_DrvMtrInverted) {
+      Me_b_DrvMtrInverted = Le_b_DrvMtrInverted;
+    }
+
+
+
   public void resetDrvEncdrPstn() {
     Ms_h_DrvMtr.setSelectedSensorPosition(0);
   }
 
 
   public void resetDrvZeroPstn() {
-    Me_r_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
+    Me_Cnt_DrvEncdrZeroPstn = (double)Ms_h_DrvMtr.getSelectedSensorPosition();
   }
 
 
-  public double getDrvEncdrVal() {
+  public double getDrvEncdrCntsAbs() {
     return ((double)Ms_h_DrvMtr.getSelectedSensorPosition());
   }
 
 
-  public double getDrvEncdrDelt() {
-    return ((double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn);
+  public double getDrvEncdrCntsRel() {
+    return ((double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_Cnt_DrvEncdrZeroPstn);
   }
 
-/*
-  public double getDrvInchesPerEncdrCnts(double Le_Cnts_DrvEncdrCnts) {
+
+  public double getDrvInchesPerEncdrCnts(double Le_Cnts_DrvEncdrCnts, DriveShiftPos Le_e_SelectedGear) {
     double Le_r_DrvGearRat;
     double Le_r_WhlRevs;
     double Le_l_DrvWhlDistInches;
 
-    if (shiftSubsystem.getSelectedGearRatio() == DriveShiftPos.HIGH_GEAR) {
+    if (Le_e_SelectedGear == DriveShiftPos.HIGH_GEAR) {
       Le_r_DrvGearRat = K_SWRV.KeSWRV_r_DrvMtrEncdrToWhlRatHi;
     }
     else {
@@ -581,15 +637,14 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
 
     return (Le_l_DrvWhlDistInches);
   }
-*/
 
-/*
-  public int getDrvEncdrCntsPerInches(double Le_l_DrvWhlDistInches) {
+
+  public int getDrvEncdrCntsPerInches(double Le_l_DrvWhlDistInches, DriveShiftPos Le_e_SelectedGear) {
     double Le_r_DrvGearRat;
     double Le_r_WhlRevs;
     double Le_Cnts_DrvEncdr;
 
-    if (shiftSubsystem.getSelectedGearRatio() == DriveShiftPos.HIGH_GEAR) {
+    if (Le_e_SelectedGear == DriveShiftPos.HIGH_GEAR) {
       Le_r_DrvGearRat = K_SWRV.KeSWRV_r_DrvMtrEncdrToWhlRatHi;
     }
     else {
@@ -601,15 +656,21 @@ public void sweepCaddyToAng(TeRotDirctn Le_e_RotDirctn, double Le_r_PwrLvl) {
   
     return ((int) Math.round(Le_Cnts_DrvEncdr));
   }
-*/
 
-/*
-  public double getDrvDistTravelled() { 
+  public double getDrvDistTravelled(DriveShiftPos Le_e_SelectedGear) { 
     double Le_Cnts_DrvEncdrCntDelt;  
-    Le_Cnts_DrvEncdrCntDelt = (double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_r_DrvEncdrZeroPstn;
-    return (getDrvInchesPerEncdrCnts(Le_Cnts_DrvEncdrCntDelt));
+    Le_Cnts_DrvEncdrCntDelt = (double)Ms_h_DrvMtr.getSelectedSensorPosition() - Me_Cnt_DrvEncdrZeroPstn;
+    return (getDrvInchesPerEncdrCnts(Le_Cnts_DrvEncdrCntDelt, Le_e_SelectedGear));
   }
-*/
+
+
+  public double getDrvDistance(DriveShiftPos Le_e_SelectedGear) {
+    double Le_Cnts_DrvEncdrCnt = Ms_h_DrvMtr.getSelectedSensorPosition();
+    if (Me_b_DrvMtrInverted == true)
+      Le_Cnts_DrvEncdrCnt = -Le_Cnts_DrvEncdrCnt;
+    return getDrvEncdrCntsPerInches(Le_Cnts_DrvEncdrCnt, Le_e_SelectedGear);
+}
+
 
 
   /********************************************************/

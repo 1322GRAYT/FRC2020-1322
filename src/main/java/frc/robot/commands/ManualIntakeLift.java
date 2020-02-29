@@ -35,7 +35,7 @@ public class ManualIntakeLift extends CommandBase {
   @Override
   public void execute() {
     double powerIntake = auxStick.getY(Hand.kRight);
-    if(powerIntake > .1 && !ballSubsystem.getBallSensorOuput()) {
+    if(powerIntake > .1) { // && !ballSubsystem.getBallSensorOuput()) { // Disabled because sensor is dead
       ballSubsystem.runIntake(powerIntake);
     } else if (powerIntake < -.1) {
       ballSubsystem.runIntake(powerIntake);

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -41,6 +42,7 @@ public class RobotContainer {
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
 
+
   class TurretTrigger extends Trigger{
     @Override
     public boolean get() {
@@ -60,16 +62,19 @@ public class RobotContainer {
     turretTrigger.whileActiveContinuous(new AutoAim(aimSubsystem, visionSubsystem, auxStick));
   }
 
-  public SwerveDriveSubsystem gSwerveDriveSubsystem() {
-    return swerveDriveSystem;
-  }
-
   private void setDefaultCommands() {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, driverStick));
     CommandScheduler.getInstance().setDefaultCommand(aimSubsystem, new ManualTurret(aimSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_DrvManual(swerveDriveSystem, driverStick));
   }
+
+
+  public SwerveDriveSubsystem getSwerveDriveSubsystem()
+    {
+    return(swerveDriveSystem);
+    }
+
 
 
   /* X-Box Controller Number Assignments */
@@ -97,7 +102,7 @@ public class RobotContainer {
     new JoystickButton(driverStick, 6).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
     new JoystickButton(driverStick, 5).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
     /* Rotation Control Encoder Zero Position Learn */
-    new JoystickButton(driverStick, 8).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
+//    new JoystickButton(driverStick, 8).whenPressed(new SDRV_RotInitRobot_CG(swerveDriveSystem));
 
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
     auxStick = new XboxController(1);
@@ -114,9 +119,9 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  /*
+  
   public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
-    return m_autoCommand;
-  }*/
+    return new ManualShoot(ballSubsystem, turretSubsystem, auxStick);
+  }
 }

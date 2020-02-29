@@ -42,7 +42,7 @@ public class SDRV_DrvManual extends CommandBase {
     Xe_r_LatPwr  =  driverStick.getX(Hand.kLeft);
     Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
 
-    swerveDriveSubsystem.HolonomicDrv(Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr);
+    swerveDriveSubsystem.HolonomicDrv(Xe_r_LongPwr, Xe_r_LatPwr, Xe_r_RotPwr, false);
   }
 
   // Called once the command ends or is interrupted.

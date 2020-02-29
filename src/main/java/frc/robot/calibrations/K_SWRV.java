@@ -21,7 +21,7 @@ public class K_SWRV {
 	  /** KeSWRV_b_DebugEnbl: Swerve Drive System Enable
      *  Calibartion to send data to dashbord to debug.
      */
-    public static final boolean KeSWRV_b_DebugEnbl = true;
+    public static final boolean KeSWRV_b_DebugEnbl = false;
 
     
 	  /** KeSWRV_b_DrvMtrRotDirctnInvertEnbl: Swerve Drive System Enable
@@ -269,14 +269,14 @@ public class K_SWRV {
      * Motor Driver Maximum Current Limit for Primary Driver,
      * Supply Current Limit.
      */
-    public static final double KeSWRV_I_DrvDrvrLmtMaxPri = 40;
+    public static final double KeSWRV_I_DrvDrvrLmtMaxPri = 60;
 
  
    /** KeSWRV_I_DrvDrvrLmtMaxSec: Swerve Drive System Drive Control
      * Motor Driver Maximum Current Limit for Secondary Driver,
      * Stator Current Limit. 
      */
-    public static final double KeSWRV_I_DrvDrvrLmtMaxSec = 20;
+    public static final double KeSWRV_I_DrvDrvrLmtMaxSec = 60;
 
 
    /** KeSWRV_t_DrvCAN_TmeOut: Swerve Drive System Rotation Control
@@ -311,11 +311,72 @@ public class K_SWRV {
      */    
     public static final double KeSWRV_r_RZL_PwrSwpFine = 0.05;
 
-   /** KeSWRV_t_RZL_ZeroDtctThrsh: Swerve Drive System - Rotation Control
-     * Encoder Zero Learn Zero Detection Time. 
+   /** KeSWRV_t_RZL_ZeroDtctThrshIntrsv: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Zero Detection Time for the Intrusive Test. 
      */    
-    public static final double KeSWRV_t_RZL_ZeroDtctThrsh = 0.250;
+    public static final double KeSWRV_t_RZL_ZeroDtctThrshIntrsv = 0.250;
 
+   /** KeSWRV_t_RZL_ZeroDtctThrshPassive: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Zero Detection Time for the Passive Learn.
+     */    
+    public static final double KeSWRV_t_RZL_ZeroDtctThrshPassive = 0.100;
+
+   /** KeSWRV_t_RZL_TimeOutThrshIntrsv: Swerve Drive System - Rotation Control
+     * Encoder Zero Learn Zero Detection Safety Time-Out for the Intrusive Test. 
+     */    
+    public static final double KeSWRV_t_RZL_TimeOutThrshIntrsv = 3.0;
+
+
+
+  /******************************************************/
+  /*  Swerve Drive Control: Closed Loop Drive Control   */
+ 	/******************************************************/	 	
+
+   /** KeSWRV_Cnt_CL_DrvErrTgtDB_Fwd: Swerve Drive System - 
+     * Closed Loop Control Drive Control Error Target Deadband
+     * Below which Closed-Loop will be considered Complete for
+     * Longitudinal control (Forward/Rearward).
+     */    
+    public static final int KeSWRV_Cnt_CL_DrvErrTgtDB_Fwd = 2;
+
+   /** KeSWRV_Cnt_CL_DrvErrTgtDB_Strafe: Swerve Drive System - 
+     * Closed Loop Control Drive Control Error Target Deadband
+     * Below which Closed-Loop will be considered Complete for
+     * Latitudinal control or Strafing (Right/Left).
+     */    
+    public static final int KeSWRV_Cnt_CL_DrvErrTgtDB_Strafe = 2;
+
+   /** KeSWRV_Deg_CL_DrvErrTgtDB_Rot: Swerve Drive System - 
+     * Closed Loop Control Drive Control Error Target Deadband
+     * Below which Closed-Loop will be considered Complete for
+     * Rotational control (CW/CCW).
+     */    
+    public static final double KeSWRV_Deg_CL_DrvErrTgtDB_Rot = 1;
+
+    
+   /** KeSWRV_t_CL_DrvSyncThrshFwd: Swerve Drive System - 
+     * Closed Loop Control Drive Control Sync Time for
+     * Longitudinal Drive control (Forward/Reward).
+     */    
+    public static final double KeSWRV_t_CL_DrvSyncThrshFwd = 0.100;
+
+    public static final double KeSWRV_t_CL_DrvSyncThrshStrafe = 0.100;
+
+    public static final double KeSWRV_t_CL_DrvSyncThrshRot = 0.100;
+
+
+    public static final double KeSWRV_k_CL_PropGx_Long = 1;
+    public static final double KeSWRV_k_CL_IntglGx_Long = 0.001;
+    public static final double KeSWRV_k_CL_DerivGx_Long = 0;
+
+
+    public static final double KeSWRV_k_CL_PropGx_Lat = 1;
+    public static final double KeSWRV_k_CL_IntglGx_Lat = 0.001;
+    public static final double KeSWRV_k_CL_DerivGx_Lat = 0;
+
+    public static final double KeSWRV_k_CL_PropGx_Rot = 1;
+    public static final double KeSWRV_k_CL_IntglGx_Rot = 0.001;
+    public static final double KeSWRV_k_CL_DerivGx_Rot = 0;
 
 
 }
