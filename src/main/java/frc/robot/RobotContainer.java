@@ -25,7 +25,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final SwerveDriveSubsystem swerveDriveSystem = new SwerveDriveSubsystem();	
+//  private final SwerveDriveSubsystem swerveDriveSystem = new SwerveDriveSubsystem();	
+  private final DriveSubsystem driveSubsystem = new DriveSubsystem();
   private final ColorWheelSubsystem colorWheelSubsystem = new ColorWheelSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
@@ -66,14 +67,21 @@ public class RobotContainer {
     CommandScheduler.getInstance().setDefaultCommand(liftSubsystem, new ManualLift(liftSubsystem, driverStick));
     CommandScheduler.getInstance().setDefaultCommand(aimSubsystem, new ManualTurret(aimSubsystem, auxStick));
     CommandScheduler.getInstance().setDefaultCommand(ballSubsystem, new ManualIntakeLift(ballSubsystem, auxStick));
-    CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_DrvManual(swerveDriveSystem, driverStick));
+//    CommandScheduler.getInstance().setDefaultCommand(swerveDriveSystem, new SDRV_DrvManual(swerveDriveSystem, driverStick));
+    CommandScheduler.getInstance().setDefaultCommand(driveSubsystem, new DRV_DrvManual(driveSubsystem, driverStick));
   }
 
-
+/*
   public SwerveDriveSubsystem getSwerveDriveSubsystem()
     {
     return(swerveDriveSystem);
     }
+*/
+
+  public DriveSubsystem getDriveSubsystem()
+    {
+    return(driveSubsystem);
+    }    
 
 
 
