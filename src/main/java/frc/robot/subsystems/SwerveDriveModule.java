@@ -54,9 +54,9 @@ public class SwerveDriveModule extends SubsystemBase {
   private final TalonFX Ms_h_DrvMtr;
 
   
-  private int Me_r_ModRevs;
-
   /* Rotation Motor Data */
+  private int Me_r_RotModRevs;
+  private double Me_Deg_RotAngActRaw;
   private double Me_r_RotEncdrZeroOfst;
   private double Me_t_RotMtrStlInitTm;
  
@@ -83,7 +83,6 @@ public class SwerveDriveModule extends SubsystemBase {
   /*******************************/
   SwerveDriveModule(final int Le_i_ModIdx, final CANSparkMax Ls_h_RotMtr, final TalonFX Ls_h_DrvMtr, final DigitalInput Ls_b_RotZeroDtcd,final double Le_r_RotEncdrZeroOfst) {
     Me_i_ModIdx = Le_i_ModIdx;
-    Me_r_ModRevs = (int)0;
   
     Ms_h_RotMtr = Ls_h_RotMtr;
     Ms_h_RotEncdr = Ms_h_RotMtr.getEncoder();
@@ -91,8 +90,10 @@ public class SwerveDriveModule extends SubsystemBase {
 
     Ms_h_DrvMtr = Ls_h_DrvMtr;
 
+    Me_r_RotModRevs  = (int)0;    
+    Me_Deg_RotAngActRaw   = 0;
     Me_r_RotEncdrZeroOfst = Le_r_RotEncdrZeroOfst;
-    Me_t_RotMtrStlInitTm = 0;
+    Me_t_RotMtrStlInitTm  = 0;
 
     Me_e_RZL_St = Te_RZL_St.Init;
     Me_Deg_RZL_AngInit = 0;
@@ -217,51 +218,31 @@ public class SwerveDriveModule extends SubsystemBase {
 
 
   /**
-   * Method: getRotActAngRaw - Swerve Drive System - Gets the Rotational Motor
+   * Method: calcRotActAng - Swerve Drive System - Calculates the Rotational Motor
    * Actual Feedback Angle that has not been normalized for a single caddy
-   * rotation.
-   * 
+   * rotation. lso Stores away the number of Revs of wind-up if the Caddy had
+   * wound up multiple times.
+   * @param  Le_r_RotActEndrPstn  (double: caddy actual encoder position in revs)
    * @return Le_Deg_RotAngAct (double: caddy rotation actual angle raw - can have multiple rotations)
    */
-  public double getRotActAngRaw() {
-    double Le_Deg_RotAngActRaw;
-    Le_Deg_RotAngActRaw = (Ms_h_RotEncdr.getPosition() / K_SWRV.KeSWRV_r_RotMtrEncdrToCaddyRat) * 360.0;
-    return (Le_Deg_RotAngActRaw);
+  public double calcRotActAng(double Le_r_RotActEndrPstn) {
+    Me_Deg_RotAngActRaw = (Le_r_RotActEndrPstn / K_SWRV.KeSWRV_r_RotMtrEncdrToCaddyRat) * 360.0;
+    Me_r_RotModRevs = (int)(Me_Deg_RotAngActRaw / 360);
+    return (Me_Deg_RotAngActRaw);
   }
-
-
-  /**
-   * Method: correctRotActAng - Swerve Drive System - Gets the Rotational Motor
-   * Actual Feedback Angle that has been corrected for the Rotation Control
-   * Zero Position Offset.
-   * @param  Le_Deg_RotAngActRaw  (double: caddy rotation actual angle raw)
-   * @return Le_Deg_RotAngActCorr (double: caddy rotation actual angle corrected for zero)
-   */
-/*  
-  public double correctRotActAng(double Le_Deg_RotAngActRaw) {
-    double Le_Deg_RotAngActCorr;
-    Le_Deg_RotAngActCorr = Le_Deg_RotAngActRaw - Me_Deg_RotEncdrZeroOfst;
-    return (Le_Deg_RotAngActCorr);
-  }
-*/
 
 
   /**
    * Method: normRotActAng - Swerve Drive System - Normailizes the
-   * Rotation Actual Angle to a Single Caddy Rotation and also
-   * Stores away the number of Revs if the Caddy had wound up
-   * multiple times.
+   * Rotation Actual Angle to a Single Caddy Rotation.
    * @param  Le_Deg_RotAngAct     (double: caddy rotation actual angle ) 
    * @return Le_Deg_RotAngActNorm (double: caddy rotation actual angle normalized)
    */
   public double normRotActAng(double Le_Deg_RotAngAct) {
     double Le_Deg_RotAngActNorm;
-    Me_r_ModRevs = (int)(Le_Deg_RotAngAct / 360);
     Le_Deg_RotAngActNorm = Le_Deg_RotAngAct % 360;
-
     return (Le_Deg_RotAngActNorm);
   }
-
 
   /**
    * Method: cnvrtRotActAng - Swerve Drive System - Converts the
@@ -278,9 +259,23 @@ public class SwerveDriveModule extends SubsystemBase {
   }
 
 
-
   /**
-   * Method: calcRotTgtAng - Swerve Drive System - Calculates the
+   * Method: cnvrtRotTgtAng - Swerve Drive System - Calculates the
+   * Rotation Angle Target from the Calculated Angle by removing the 180
+   * degree frame of reference shift that was applied to the Target Raw
+   * (-180 to 180) up front.
+   * @param  Le_Deg_RotAngCalc (double: caddy rotation calculated angle desired: 0 to 360 ) 
+   * @return Le_Deg_RotAngTgt  (double: caddy rotation target angle requested: -180 to 180)
+   */
+  public double cnvrtRotTgtAng(double Le_Deg_RotAngCalc) {
+    double Le_Deg_RotAngTgt;
+    Le_Deg_RotAngTgt = (Le_Deg_RotAngCalc - 180);  // Convert from [0 to 360] back to [-180 to 180]
+    return (Le_Deg_RotAngTgt);
+  }
+
+  
+  /**
+   * Method: calcRotTgtAngAbs - Swerve Drive System - Calculates the
    * Rotation Angle Target from the Calculated Angle taking into
    * account removing the 180 degree frame of reference shift that
    * was applied to the Target Raw (-180 to 180), and the Drive Motor
@@ -288,7 +283,7 @@ public class SwerveDriveModule extends SubsystemBase {
    * @param  Le_Deg_RotAngCalc (double: caddy rotation calculated angle desired ) 
    * @return Le_Deg_RotAngTgt  (double: caddy rotation target angle requested)
    */
-  public double calcRotTgtAng(double Le_Deg_RotAngCalc) {
+  public double calcRotTgtAngAbs(double Le_Deg_RotAngCalc) {
     double Le_Deg_RotAngTgt;
     Le_Deg_RotAngTgt = (Le_Deg_RotAngCalc - 180);  // Convert from [0 to 360] back to [-180 to 180]
     if (Me_e_DrvMtrDirctn == TeMtrDirctn.Rwd) {
@@ -296,23 +291,6 @@ public class SwerveDriveModule extends SubsystemBase {
     }
     return (Le_Deg_RotAngTgt);
   }
-
-  /**
-   * Method: correctRotTgtAng - Swerve Drive System: Adjusts the Rotation Control
-   * Motor Target Angle with the Zero Position Offset Correction and Correction
-   * for Drive Motor Direction if the Drive Motor is Inverted.
-   * 
-   * @param Le_Deg_RotAngTgtRaw (double: raw desired caddy target angle)
-   * @return Le_Deg_RotAngTgtCorr (double: corrected desired caddy target angle)
-   */
-/*
-  public double correctRotTgtAng(final double Le_Deg_RotAngTgtRaw) {
-    double Le_Deg_RotAngTgtCorr;
-    Le_Deg_RotAngTgtCorr = (Le_Deg_RotAngTgtRaw + Me_Deg_RotEncdrZeroOfst) % 360;
-
-    return (Le_Deg_RotAngTgtCorr);
-  }
-*/
 
 
   /**
@@ -324,13 +302,9 @@ public class SwerveDriveModule extends SubsystemBase {
    * @return Le_r_RotAngTgt (double: desired rotation motor encoder target)
    */
   public double calcRotEncdrTgt(double Le_Deg_RotAngTgt) {
-    double Le_r_RotAngTgt, Le_r_RotAngTgtMtr, Le_r_RotAngMtrWndUpOfst;
-    double Le_r_RotEncdrTgt;
+    double Le_r_RotAngTgt,  Le_r_RotEncdrTgt;
     Le_r_RotAngTgt = (Le_Deg_RotAngTgt / 360);
-    Le_r_RotAngTgtMtr = Le_r_RotAngTgt * K_SWRV.KeSWRV_r_RotMtrEncdrToCaddyRat;
-    Le_r_RotAngMtrWndUpOfst =(double)Me_r_ModRevs * K_SWRV.KeSWRV_r_RotMtrEncdrToCaddyRat;
-    Le_r_RotEncdrTgt = Le_r_RotAngMtrWndUpOfst + Le_r_RotAngTgtMtr;
-
+    Le_r_RotEncdrTgt = Le_r_RotAngTgt * K_SWRV.KeSWRV_r_RotMtrEncdrToCaddyRat;
     return (Le_r_RotEncdrTgt);
   }
 
@@ -366,7 +340,18 @@ public class SwerveDriveModule extends SubsystemBase {
     Ms_h_RotEncdr.setPosition(0);
   }
 
-  
+
+
+  public double getRotAngActRaw() {
+    return(Me_Deg_RotAngActRaw);
+  }
+
+
+  public int getRotModRevs() {
+    return(Me_r_RotModRevs);
+  }
+
+
   /**
    * Method: setRotMtrPwr - Swerve Drive System: Sets the Rotational Motor Speed
    * Pwr Target.
@@ -376,7 +361,7 @@ public class SwerveDriveModule extends SubsystemBase {
   public void setRotMtrPwr(final double Le_r_RotMtrPwr) {
     Ms_h_RotMtr.getPIDController().setReference(Le_r_RotMtrPwr, ControlType.kDutyCycle);
   }
-
+ 
 
   /**
    * Method: getRotEncdrZeroDtctd - Swerve Drive System: Returns the state
@@ -423,7 +408,7 @@ public class SwerveDriveModule extends SubsystemBase {
     }
     /* **Init State** */
     else if (Me_e_RZL_St == Te_RZL_St.Init)  {
-      Me_Deg_RZL_AngInit = getRotActAngRaw();
+      Me_Deg_RZL_AngInit = getRotAngActRaw();
       Me_Deg_RZL_AngSwp = K_SWRV.KeSWRV_Deg_RZL_AngSwpCourse;
       Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit + Me_Deg_RZL_AngSwp;
       Me_r_RZL_Pwr = K_SWRV.KeSWRV_r_RZL_PwrSwpCourse;
@@ -448,7 +433,7 @@ public class SwerveDriveModule extends SubsystemBase {
         sweepCaddyToAng(TeRotDirctn.CW, 0.0);
         Me_t_RZL_DtctTmrIntrsv.start();
       }
-      else if (getRotActAngRaw() >= Me_Deg_RZL_AngTgt) {
+      else if (getRotAngActRaw() >= Me_Deg_RZL_AngTgt) {
         Me_e_RZL_St = Te_RZL_St.SwpCCW;
         Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit - Me_Deg_RZL_AngSwp;
         sweepCaddyToAng(TeRotDirctn.CCW, Me_r_RZL_Pwr);
@@ -465,7 +450,7 @@ public class SwerveDriveModule extends SubsystemBase {
         sweepCaddyToAng(TeRotDirctn.CCW, 0.0);
         Me_t_RZL_DtctTmrIntrsv.start();
       }
-      else if (getRotActAngRaw() <= Me_Deg_RZL_AngTgt) {
+      else if (getRotAngActRaw() <= Me_Deg_RZL_AngTgt) {
         Me_e_RZL_St = Te_RZL_St.SwpCW;
         Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit;
         sweepCaddyToAng(TeRotDirctn.CW, Me_r_RZL_Pwr);
@@ -487,7 +472,7 @@ public class SwerveDriveModule extends SubsystemBase {
       }
       else{
         /* **Zero Position Sensor No Longer Detected - Start Short Sweep Again Slower** */
-        Me_Deg_RZL_AngInit = getRotActAngRaw();
+        Me_Deg_RZL_AngInit = getRotAngActRaw();
         Me_Deg_RZL_AngSwp = K_SWRV.KeSWRV_Deg_RZL_AngSwpFine;
         Me_Deg_RZL_AngTgt = Me_Deg_RZL_AngInit + Me_Deg_RZL_AngSwp;
         Me_r_RZL_Pwr = K_SWRV.KeSWRV_r_RZL_PwrSwpFine;
@@ -633,7 +618,7 @@ public int getRotEncdrZeroLearnCntr() {
     }
 
     Le_r_WhlRevs = Le_Cnts_DrvEncdrCnts / (K_SWRV.KeSWRV_Cnt_DrvEncdrCntsPerRev * Le_r_DrvGearRat);
-    Le_l_DrvWhlDistInches = Le_r_WhlRevs * K_SWRV.KeSWRV_l_DrvWhlDistPerRot;
+    Le_l_DrvWhlDistInches = Le_r_WhlRevs * K_SWRV.KeSWRV_l_DrvWhlDistPerRev;
 
     return (Le_l_DrvWhlDistInches);
   }
@@ -651,7 +636,7 @@ public int getRotEncdrZeroLearnCntr() {
       Le_r_DrvGearRat = K_SWRV.KeSWRV_r_DrvMtrEncdrToWhlRatLo;
     }
 
-    Le_r_WhlRevs = Le_l_DrvWhlDistInches / K_SWRV.KeSWRV_l_DrvWhlDistPerRot;
+    Le_r_WhlRevs = Le_l_DrvWhlDistInches / K_SWRV.KeSWRV_l_DrvWhlDistPerRev;
     Le_Cnts_DrvEncdr = Le_r_WhlRevs * Le_r_DrvGearRat * K_SWRV.KeSWRV_Cnt_DrvEncdrCntsPerRev;
   
     return ((int) Math.round(Le_Cnts_DrvEncdr));
@@ -668,7 +653,7 @@ public int getRotEncdrZeroLearnCntr() {
     double Le_Cnts_DrvEncdrCnt = Ms_h_DrvMtr.getSelectedSensorPosition();
     if (Me_b_DrvMtrInverted == true)
       Le_Cnts_DrvEncdrCnt = -Le_Cnts_DrvEncdrCnt;
-    return getDrvEncdrCntsPerInches(Le_Cnts_DrvEncdrCnt, Le_e_SelectedGear);
+    return getDrvInchesPerEncdrCnts(Le_Cnts_DrvEncdrCnt, Le_e_SelectedGear);
 }
 
 

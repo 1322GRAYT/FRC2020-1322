@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class DRV_DrvManual extends CommandBase {
   /**
-   * Command: SDRV_DrvFwd Command to Drive the Swerve Drive
+   * Command: SDRV_DrvFwd Command t    driveSubsystem.zeroGyro();o Drive the Swerve Drive
    * Forward or Backwards at a specific Power Request. 
    */
   private final DriveSubsystem driveSubsystem;
@@ -32,6 +32,7 @@ public class DRV_DrvManual extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -40,13 +41,13 @@ public class DRV_DrvManual extends CommandBase {
     Xe_r_LongPwr = -driverStick.getY(Hand.kLeft);
     Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
 
-    driveSubsystem.TankDrive(Xe_r_LongPwr, Xe_r_RotPwr);
+    driveSubsystem.TankDrive(Xe_r_LongPwr, Xe_r_RotPwr, 0, false);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    driveSubsystem.stopDrvMtrs();
+    driveSubsystem.stopDrvMtrAll();
   }
 
   // Returns true when the command should end.

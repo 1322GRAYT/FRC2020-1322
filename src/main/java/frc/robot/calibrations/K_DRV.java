@@ -66,18 +66,11 @@ public class K_DRV {
   /*  Tank Drive-System Design Mechanical Parameters     */
  	/*******************************************************/	 	
 	
-	  /** KeDRV_Cf_DrvEncdrCntsPerInchHi: Tank Drive System - Conversion
+	  /** KeDRV_Cf_DrvEncdrCntsPerInch: Tank Drive System - Conversion
      * Factor of the Number of Drive Motor Encoder Counts of Rotation
-     * per 1 Linear inch of Drive Wheel travel in Low Gear Ratio.
+     * per 1 Linear inch of Drive Wheel travel.
      */
-    public static final double KeDRV_Cf_DrvEncdrCntsPerInchHi = 35.6;
-
-
-	  /** KeDRV_Cf_DrvEncdrCntsPerInchLo: Tank Drive System - Conversion
-     * Factor of the Number of Drive Motor Encoder Counts of Rotation
-     * per 1 Linear inch of Drive Wheel travel in Low Gear Ratio.
-     */
-    public static final double KeDRV_Cf_DrvEncdrCntsPerInchLo = 35.6;
+    public static final double KeDRV_Cf_DrvEncdrCntsPerInch = 35.6;
 
 
 	  /** KeDRV_Cnt_DrvEncdrCntsPerRev: Tank Drive System: Number
@@ -86,24 +79,17 @@ public class K_DRV {
     public static final double KeDRV_Cnt_DrvEncdrCntsPerRev = 360;
 
 
-	  /** KeDRV_l_DrvWhlDistPerRot: Drive System: Number of lineal
-     * distance travaled per one rotation of Drive Wheel Rotation
+	  /** KeDRV_l_DrvWhlDistPerRev: Drive System: Number of lineal
+     * distance travaled per one rotation of Drive Wheel Revolution
      */
-    public static final double KeDRV_l_DrvWhlDistPerRot = 4.0 * Math.PI; // 12.57142857
+    public static final double KeDRV_l_DrvWhlDistPerRev = 4.0 * Math.PI; // 12.57142857
 
 
-    /** KeDRV_r_DrvMtrEncdrToWhlRatLo: Tank Drive System: Number of
+    /** KeDRV_r_DrvMtrEncdrToWhlRat: Tank Drive System: Number of
      * Drive Control Motor Encoder Rotations to Wheel Rotations
-     * Ratio for Low Gear Ration.
+     * Ratio.
      */
-    public static final double KeDRV_r_DrvMtrEncdrToWhlRatLo = 11.87016;
-
-
-	  /** KeDRV_r_DrvMtrEncdrToWhlRatHi: Tank Drive System: Number of
-     * Drive Control Motor Encoder Rotations to Wheel Rotations
-     * Ratio for High Gear Ratio.
-     */
-    public static final double KeDRV_r_DrvMtrEncdrToWhlRatHi = 8.166667;
+    public static final double KeDRV_r_DrvMtrEncdrToWhlRat = 11.87016;
 
 
 
@@ -196,8 +182,9 @@ public class K_DRV {
 
 
 
+
   /******************************************************/
-  /*  Swerve Drive Control: Closed Loop Drive Control   */
+  /*  Drive Control: Drive Forward Control Closed Loop  */
  	/******************************************************/	 	
 
   /** KeDRV_Cnt_CL_DrvErrTgtDB_Fwd: Tank Drive System - 
@@ -211,7 +198,7 @@ public class K_DRV {
   /** KeDRV_Deg_CL_DrvErrTgtDB_Rot: Tank Drive System - 
     * Closed Loop Control Drive Control Error Target Deadband
     * Below which Closed-Loop will be considered Complete for
-    * Rotational control (CW/CCW).
+    * Longitudinal control (Forward/Rearward).
     */    
     public static final double KeDRV_Deg_CL_DrvErrTgtDB_Rot = 1;
 
@@ -225,50 +212,95 @@ public class K_DRV {
 
   /** KeDRV_t_CL_DrvSyncThrshFwd: Tank Drive System - 
     * Closed Loop Control Drive Control Sync Time for
+    * Heading Tracking (Left/Right Correction) of
     * Longitudinal Drive control (Forward/Reward).
     */    
     public static final double KeDRV_t_CL_DrvSyncThrshRot = 0.100;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_DrvPropGxFwd: Tank Drive System - 
     * Closed Loop Control Proportional Gain for
     * Longitudinal Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_PropGx_Long = 1;
+    public static final double KeDRV_k_CL_DrvPropGxFwd = 1;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_DrvIntglGxFwd: Tank Drive System - 
     * Closed Loop Control Integral Gain for
     * Longitudinal Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_IntglGx_Long = 0.001;
+    public static final double KeDRV_k_CL_DrvIntglGxFwd = 0.001;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_DrvDerivGxFwd: Tank Drive System - 
     * Closed Loop Control Derivative Gain for
     * Longitudinal Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_DerivGx_Long = 0;
+    public static final double KeDRV_k_CL_DrvDerivGxFwd = 0;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_DrvPropGxRot: Tank Drive System - 
+    * Closed Loop Control Proportional Gain for
+    * Heading Tracking (Left/Right Correction) of
+    * Longitudinal Drive control (Forward/Reward).
+    */
+    public static final double KeDRV_k_DrvPropGxRot = 1;
+
+
+  /** KeDRV_k_CL_DrvIntglGxRot: Tank Drive System - 
+    * Closed Loop Control Integral Gain for
+    * Heading Tracking (Left/Right Correction) of
+    * Longitudinal Drive control (Forward/Reward).
+    */
+    public static final double KeDRV_k_CL_DrvIntglGxRot = 0.001;
+
+
+  /** KeDRV_k_CL_DrvDerivGxRot: Tank Drive System - 
+    * Closed Loop Control Derivative Gain for
+    * Heading Tracking (Left/Right Correction) of
+    * Longitudinal Drive control (Forward/Reward).
+    */
+    public static final double KeDRV_k_CL_DrvDerivGxRot = 0;
+
+
+
+  /******************************************************/
+  /*  Drive Control: Rotation Control Closed Loop       */
+ 	/******************************************************/	 	
+
+  /** KeDRV_Deg_CL_RotErrTgtDB: Tank Drive System - 
+    * Closed Loop Control Drive Control Error Target Deadband
+    * Below which Closed-Loop will be considered Complete for
+    * Rotational control (CW/CCW).
+    */    
+    public static final double KeDRV_Deg_CL_RotErrTgtDB = 1;
+
+  /** KeDRV_t_CL_RotSyncThrshRot: Tank Drive System - 
+    * Closed Loop Control Drive Control Sync Time for
+    * Rotational Drive control (Forward/Reward).
+    */    
+    public static final double KeDRV_t_CL_RotSyncThrshRot = 0.100;
+
+
+  /** KeDRV_k_CL_RotPropGx: Tank Drive System - 
     * Closed Loop Control Proportional Gain for
     * Rotational Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_PropGx_Rot = 1;
+    public static final double KeDRV_k_CL_RotPropGx = 1;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_RotIntglGx: Tank Drive System - 
     * Closed Loop Control Integral Gain for
     * Rotational Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_IntglGx_Rot = 0.001;
+    public static final double KeDRV_k_CL_RotIntglGx = 0.001;
 
 
-  /** KeDRV_k_CL_PropGx_Long: Tank Drive System - 
+  /** KeDRV_k_CL_RotDerivGx: Tank Drive System - 
     * Closed Loop Control Derivative Gain for
     * Rotational Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_CL_DerivGx_Rot = 0;
+    public static final double KeDRV_k_CL_RotDerivGx = 0;
+
 
 }

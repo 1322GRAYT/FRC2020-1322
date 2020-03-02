@@ -108,10 +108,10 @@ public class K_SWRV {
     public static final double KeSWRV_Cnt_DrvEncdrCntsPerRev = 360;
 
 
-	  /** KeSWRV_l_DrvWhlDistPerRot: Swerve Drive System: Number of lineal
-     * distance travaled per one rotation of Swerve Drive Wheel Rotation
+	  /** KeSWRV_l_DrvWhlDistPerRev: Swerve Drive System: Number of lineal
+     * distance travaled per one rotation of Swerve Drive Wheel Revolution
      */
-    public static final double KeSWRV_l_DrvWhlDistPerRot = 4.0 * Math.PI; // 12.57142857
+    public static final double KeSWRV_l_DrvWhlDistPerRev = 4.0 * Math.PI; // 12.57142857
 
 
     /** KeSWRV_r_DrvMtrEncdrToWhlRatLo: Swerve Drive System: Number of
