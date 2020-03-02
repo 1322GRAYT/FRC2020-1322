@@ -7,23 +7,21 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.SwerveDriveSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/latest/docs/software/commandbased/convenience-features.html
-public class SDRV_RotInitRobot_CG extends SequentialCommandGroup {
+public class DRV_RotInitRobot_CG extends SequentialCommandGroup {
   /**
    * Creates a new SDRV_RotInitRobot_CG.
    */
-  public SDRV_RotInitRobot_CG(SwerveDriveSubsystem swerveDriveSubsystem) {
+  public DRV_RotInitRobot_CG(DriveSubsystem driveSubsystem) {
     super(
-      (new SDRV_DrvRstGyro(swerveDriveSubsystem)),
-      (new SDRV_DrvRstEncdr(swerveDriveSubsystem)),
-      (new SDRV_RotRstZero(swerveDriveSubsystem)),
-      (new SDRV_RotFindZero(swerveDriveSubsystem))
+      (new DRV_DrvRstGyro(driveSubsystem)),
+      (new DRV_DrvRstEncdr(driveSubsystem))
     );
 
   }

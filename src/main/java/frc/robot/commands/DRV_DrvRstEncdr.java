@@ -7,34 +7,33 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.SwerveDriveSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
 
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-
-public class SDRV_BrkIn extends CommandBase {
-  private SwerveDriveSubsystem swerveDriveSubsystem;
-  private XboxController auxStick;
+public class DRV_DrvRstEncdr extends CommandBase {
   /**
-   * Creates a new BreakInDrive.
+   * Command: SDRV_RotRstZero  
    */
-  public SDRV_BrkIn(SwerveDriveSubsystem swerveDriveSubsystem, XboxController auxStick) {
-    this.swerveDriveSubsystem = swerveDriveSubsystem;
-    this.auxStick = auxStick;
-    addRequirements(this.swerveDriveSubsystem);
+  private DriveSubsystem driveSubsystem;
+    int Le_Cnt_Dly;
+
+  public DRV_DrvRstEncdr(DriveSubsystem driveSubsystem) {
+    this.driveSubsystem = driveSubsystem;
+    Le_Cnt_Dly = 0;
+    addRequirements(this.driveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    driveSubsystem.resetDrvEncdrPstnAll();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swerveDriveSubsystem.cntrlBrkInSwrvDrv(auxStick.getY(Hand.kLeft), auxStick.getY(Hand.kRight));
+  Le_Cnt_Dly += 1; 
   }
 
   // Called once the command ends or is interrupted.
@@ -45,6 +44,6 @@ public class SDRV_BrkIn extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+  return (Le_Cnt_Dly >= 2);
   }
 }

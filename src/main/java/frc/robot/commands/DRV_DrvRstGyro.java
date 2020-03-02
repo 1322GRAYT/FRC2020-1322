@@ -7,28 +7,27 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.SwerveDriveSubsystem;
+import frc.robot.subsystems.DriveSubsystem;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class SDRV_RotRstZero extends CommandBase {
+public class DRV_DrvRstGyro extends CommandBase {
   /**
-   * Command: SDRV_RotRstZero  
+   * Command: DRV_DrvRstGyro  
    */
-  private SwerveDriveSubsystem swerveDriveSubsystem;
+  private DriveSubsystem driveSubsystem;
     int Le_Cnt_Dly;
 
-  public SDRV_RotRstZero(SwerveDriveSubsystem swerveDriveSubsystem) {
-    this.swerveDriveSubsystem = swerveDriveSubsystem;
+  public DRV_DrvRstGyro(DriveSubsystem driveSubsystem) {
+    this.driveSubsystem = driveSubsystem;
     Le_Cnt_Dly = 0;
-    addRequirements(this.swerveDriveSubsystem);
+    addRequirements(this.driveSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    swerveDriveSubsystem.resetRotEncdrs();
-    Le_Cnt_Dly = 0;
+    driveSubsystem.resetGyro();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -45,6 +44,6 @@ public class SDRV_RotRstZero extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return (Le_Cnt_Dly >= 2);
+  return (Le_Cnt_Dly >= 2);
   }
 }

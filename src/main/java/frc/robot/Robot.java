@@ -9,7 +9,6 @@ package frc.robot;
 
 import frc.robot.commands.*;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.SwerveDriveSubsystem;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
