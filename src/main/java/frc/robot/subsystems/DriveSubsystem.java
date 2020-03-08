@@ -12,7 +12,8 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.controller.PIDController;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.MathUtil;
 
 import com.kauailabs.navx.frc.AHRS;
@@ -20,21 +21,23 @@ import com.kauailabs.navx.frc.AHRS;
 import frc.robot.Constants;
 import frc.robot.DrvMap;
 import frc.robot.calibrations.K_DRV;
+import frc.robot.subsystems.RFSLIB;
 
 /**
  * Add your docs here.
  */
-public class DriveSubsystem implements Subsystem {
+public class DriveSubsystem extends SubsystemBase {
+	private RFSLIB rfsLIB = new RFSLIB();
 
 	private AHRS mNavX = new AHRS(SPI.Port.kMXP, (byte) 200);
 	private double VeDRV_Deg_NAV_SnsdAng;
 	private double VeDRV_Deg_NAV_DsrdAng;
 
     private TalonFX[] DriveMotor = new TalonFX[] { 
-		new TalonFX(Constants.SWRV_FR_RT_DRV),
-		new TalonFX(Constants.SWRV_FR_LT_DRV),
-		new TalonFX(Constants.SWRV_RR_LT_DRV),
-		new TalonFX(Constants.SWRV_RR_RT_DRV)
+		new TalonFX(Constants.DRV_RT_FR),
+		new TalonFX(Constants.DRV_LT_FR),
+		new TalonFX(Constants.DRV_LT_RR),
+		new TalonFX(Constants.DRV_RT_RR)
 	};
 
 	private boolean[] VaDRV_b_MtrInvrtd      = new boolean[DrvMap.NumOfMtrs];
@@ -43,7 +46,8 @@ public class DriveSubsystem implements Subsystem {
 
 
     private double VeDRV_r_NormPwrRqstFwd;
-    private double VeDRV_r_NormPwrRqstRot;
+	private double VeDRV_r_NormPwrRqstRot;
+	private double VeDRV_r_NormPwrHdgCorr;
 
     private double VeDRV_r_NormPwrCmndLt;
     private double VeDRV_r_NormPwrCmndRt;
@@ -62,11 +66,13 @@ public class DriveSubsystem implements Subsystem {
     private double VeDRV_r_PID_RotPwrOutMax;
     private double VeDRV_Deg_PID_RotAngCmnd;
 
- 
+
+
 	/*******************************/
 	/* Subsystem Constructor       */
     /*******************************/
-    public DriveSubsystem() {
+	public DriveSubsystem() {
+
 		zeroGyro();
 		captureGyroAngRaw(); 
         VeDRV_Deg_NAV_DsrdAng =  VeDRV_Deg_NAV_SnsdAng;
@@ -81,7 +87,8 @@ public class DriveSubsystem implements Subsystem {
 		}
 
         VeDRV_r_NormPwrRqstFwd = 0;
-        VeDRV_r_NormPwrRqstRot = 0;    
+		VeDRV_r_NormPwrRqstRot = 0;
+		VeDRV_r_NormPwrHdgCorr = 0;
 
         VeDRV_r_NormPwrCmndLt  = 0;
         VeDRV_r_NormPwrCmndRt  = 0;    
@@ -175,79 +182,71 @@ public class DriveSubsystem implements Subsystem {
 
 
     /*********************************************/
-	/*     Subsystem Method Definitions          */
+	/* Public Subsystem Method Definitions       */
 	/*********************************************/
 
 	@Override
 	public void periodic() {
-	  // This method will be called once per scheduler run
-	  /* Update SmartDashboard with Data */
-	  captureGyroAngRaw();
-      captureDrvEncdrCntAll();
+	    // This method will be called once per scheduler run
+	    /* Update SmartDashboard with Data */
+	    // captureGyroAngRaw();
+        // captureDrvEncdrCntAll();
 
-	  if (K_DRV.KeDRV_b_DebugEnbl == true)  {
-	    updateSmartDash();	
+	    if (K_DRV.KeDRV_b_DebugEnbl == true)  {
+	        updateSmartDash();	
 	  }
 	
 	}
 
 
-
-    public void TankDrive(double Le_r_NormPwrRqstFwd, double Le_r_NormPwrRqstRot, double Le_Deg_RotTgtAng, boolean Le_b_HdgAngCmnd) {
+    public void TankDrive(double Le_r_NormPwrRqstFwd, double Le_r_NormPwrRqstRot, double Le_r_NormPwrHdgCorr) {
 		double Le_r_NormPwrCmndLt, Le_r_NormPwrCmndRt, Le_r_NormPwrMax;
-		double Le_Deg_CL_Err;
 
-        VeDRV_r_NormPwrRqstFwd =  applyDB_Clpd(Le_r_NormPwrRqstFwd, K_DRV.KeDRV_r_DB_CntlrThrshRot);
-        VeDRV_r_NormPwrRqstRot =  applyDB_Clpd(Le_r_NormPwrRqstRot, K_DRV.KeDRV_r_DB_CntlrThrshRot);
+		VeDRV_r_NormPwrRqstFwd = Le_r_NormPwrRqstFwd;
+		VeDRV_r_NormPwrRqstRot = Le_r_NormPwrRqstRot;
+		VeDRV_r_NormPwrHdgCorr = Le_r_NormPwrHdgCorr;
 
-		Le_Deg_CL_Err = ((Le_Deg_RotTgtAng - mNavX.getYaw()) / 180)*10;
-		// todo Work Out Above Equuation
-
-
-		if ((Math.abs(VeDRV_r_NormPwrRqstFwd) < K_DRV.KeDRV_r_DB_CntlrThrshRot) &&
-		    (Math.abs(VeDRV_r_NormPwrRqstFwd) < K_DRV.KeDRV_r_DB_CntlrThrshRot)) {
-			resetDrvSysPID();
-			VeDRV_r_PID_RotPowCorr = 0;
-            Le_r_NormPwrCmndLt =  0;
-            Le_r_NormPwrCmndRt =  0;
-		}
-        else if (Math.abs(VeDRV_r_NormPwrRqstFwd) >= K_DRV.KeDRV_r_DrvRqstOvrrdFwd) {
-            Le_r_NormPwrCmndLt =  VeDRV_r_NormPwrRqstFwd + VeDRV_r_PID_RotPowCorr;
-            Le_r_NormPwrCmndRt =  VeDRV_r_NormPwrRqstFwd - VeDRV_r_PID_RotPowCorr;
-        }
-        else if (Math.abs(VeDRV_r_NormPwrRqstRot) >= K_DRV.KeDRV_r_DrvRqstOvrrdRot) {
-			Le_r_NormPwrCmndLt =  VeDRV_r_NormPwrRqstRot;
-            Le_r_NormPwrCmndRt = -VeDRV_r_NormPwrRqstRot;
-        }
-        else {
-			resetDrvSysPID();
-			VeDRV_r_PID_RotPowCorr = 0;
-            Le_r_NormPwrCmndLt =  VeDRV_r_NormPwrRqstFwd + VeDRV_r_NormPwrRqstRot;
-            Le_r_NormPwrCmndRt =  VeDRV_r_NormPwrRqstFwd - VeDRV_r_NormPwrRqstRot;
-        }
-
+        Le_r_NormPwrCmndLt =  VeDRV_r_NormPwrRqstFwd + VeDRV_r_NormPwrRqstRot + VeDRV_r_NormPwrHdgCorr;
+        Le_r_NormPwrCmndRt =  VeDRV_r_NormPwrRqstFwd - VeDRV_r_NormPwrRqstRot - VeDRV_r_NormPwrHdgCorr;
 
 		/* Normalize Max Power to +/- 1.0 if either Commaned Power is > +/- 1.0 */
 		Le_r_NormPwrMax = Math.max(Math.abs(Le_r_NormPwrCmndLt), Math.abs(Le_r_NormPwrCmndRt));
-		if (Le_r_NormPwrMax > 1.0)
-		  {
-		  Le_r_NormPwrCmndLt = Le_r_NormPwrCmndLt/Le_r_NormPwrMax;
-		  Le_r_NormPwrCmndRt = Le_r_NormPwrCmndRt/Le_r_NormPwrMax;
-		  }
+		if (Le_r_NormPwrMax > 1.0) {
+		    Le_r_NormPwrCmndLt = Le_r_NormPwrCmndLt/Le_r_NormPwrMax;
+		    Le_r_NormPwrCmndRt = Le_r_NormPwrCmndRt/Le_r_NormPwrMax;
+		}
 
-        // todo: Apply Max Rate Limiting
+		/* Apply Max Rate Limiting to Prevent Overdriving the Motors/Drivers */
+		// todo: Apply Max Rate Limiting
+		Le_r_NormPwrCmndLt = rfsLIB.LimRateOnInc(Le_r_NormPwrCmndLt, VeDRV_r_NormPwrCmndLt, K_DRV.KeDRV_r_DrvNormPwrLimMaxDelt);
+        VeDRV_r_NormPwrCmndLt = Le_r_NormPwrCmndLt;
+		Le_r_NormPwrCmndRt = rfsLIB.LimRateOnInc(Le_r_NormPwrCmndRt, VeDRV_r_NormPwrCmndRt, K_DRV.KeDRV_r_DrvNormPwrLimMaxDelt);
+        VeDRV_r_NormPwrCmndRt = Le_r_NormPwrCmndRt;
 
-        CommandDriveMotor(Le_r_NormPwrCmndLt, Le_r_NormPwrCmndRt);
+        cmndDrvMtr(VeDRV_r_NormPwrCmndLt, VeDRV_r_NormPwrCmndRt);
     }
 
 
-//	VeDRV_r_PID_RotPowCorr = PID_RotCntrl(Le_Deg_CL_RotErr); 
     /**
-     * Control Drive Rotational Control with a PID controller using the Gyro as a Reference.
+     * Method: PID_DrvCtrl - Drive System: Control Drive Longitudinal Control
+     * Drive with a PID controller using the Encoder Counts as a Reference.
+     * @param Le_Cnt_CL_ErrPstn The error term (from the input device, encoder counts) for drive distance.
+     */
+    public double PID_DrvCtrl(double Le_Cnt_CL_PstnErr) {
+		double Le_r_CL_CorrNormPwr;
+		Le_r_CL_CorrNormPwr = VsDRV_PID_Rot.calculate(Le_Cnt_CL_PstnErr);
+		Le_r_CL_CorrNormPwr = MathUtil.clamp(Le_r_CL_CorrNormPwr, VeDRV_r_PID_DrvPwrOutMin, VeDRV_r_PID_DrvPwrOutMax);
+		return(Le_r_CL_CorrNormPwr);
+	}
+
+
+    /**
+     * Method: PID_RotCtrl - Drive System: Control Drive Rotational Control
+	 * with a PID controller using the Gyro as a Reference.
      * @param Le_Deg_CL_RotErr The error term (from the input device, generally gyroscope) for rotation
 	 * and heading correction.
      */
-    private double PID_RotCtrl(double Le_Deg_CL_RotErr){
+    public double PID_RotCtrl(double Le_Deg_CL_RotErr) {
 		double Le_r_CL_CorrNormPwr;
 		Le_r_CL_CorrNormPwr = VsDRV_PID_Rot.calculate(Le_Deg_CL_RotErr);
 		Le_r_CL_CorrNormPwr = MathUtil.clamp(Le_r_CL_CorrNormPwr, VeDRV_r_PID_RotPwrOutMin, VeDRV_r_PID_RotPwrOutMax);
@@ -255,99 +254,52 @@ public class DriveSubsystem implements Subsystem {
 	  }
 
 
-//  VeDRV_r_PID_RotPowCorr = PID_DrvCntrl(Le_Cnt_CL_PstnErr); 	  
-    /**
-     * Control Drive Longitudinal Control Drive with a PID controller using the Encoder Counts as a Reference.
-     * @param Le_Cnt_CL_ErrPstn The error term (from the input device, encoder counts) for drive distance.
+	public void configPID_DrvCtrl(double Le_Cnt_DrvEncdrTgt) {
+      // Set up forward pid:
+      setDrvSetpoint(Le_Cnt_DrvEncdrTgt);
+      setDrvTolerance(5, 10);
+	  setDrvOutputRange(-1, 1);
+	  
+	}
+
+
+	public void configPID_RotCtrlHdgCorr(double Le_Deg_RotHdgTgt) {
+		// Rotation PID (has continuous input)
+		VsDRV_PID_Rot.setPID(K_DRV.KeDRV_k_CL_DrvPropGxRot, K_DRV.KeDRV_k_CL_DrvIntglGxRot, K_DRV.KeDRV_k_CL_DrvDerivGxRot);
+		setRotWraparoundInputRange(0, 360);
+		setRotSetpoint(Le_Deg_RotHdgTgt);
+		setRotTolerance(5, 5);
+		setRotOutputRange(-1, 1);
+	}  
+
+
+	public void configPID_RotCtrl(double Le_Deg_RotAngTgt) {
+		// Rotation PID (has continuous input)
+		VsDRV_PID_Rot.setPID(K_DRV.KeDRV_k_CL_RotPropGx, K_DRV.KeDRV_k_CL_RotIntglGx, K_DRV.KeDRV_k_CL_RotDerivGx);
+		setRotWraparoundInputRange(0, 360);
+		setRotSetpoint(Le_Deg_RotAngTgt);
+		setRotTolerance(5, 5);
+		setRotOutputRange(-1, 1);
+	}  
+
+
+
+    /*********************************************/
+	/*  Private Subsystem Method Definitions     */
+	/*********************************************/
+
+	/**
+     * Method: cmndDrvMtr - Swerve Drive System: Gets the direction of the Drive Motor Speed
+     * direction.
+     * @param Le_r_NormPwrCmndLt  (double:  Drive Motor Normalized Power Command -  Left-Side Motors)
+     * @param Le_r_NormPwrCmndRt  (double:  Drive Motor Normalized Power Command - Right-Side Motors)
      */
-    private double PID_DrvCtrl(double Le_Cnt_CL_PstnErr){
-		double Le_r_CL_CorrNormPwr;
-		Le_r_CL_CorrNormPwr = VsDRV_PID_Rot.calculate(Le_Cnt_CL_PstnErr);
-		Le_r_CL_CorrNormPwr = MathUtil.clamp(Le_r_CL_CorrNormPwr, VeDRV_r_PID_RotPwrOutMin, VeDRV_r_PID_RotPwrOutMax);
-		return(Le_r_CL_CorrNormPwr);
-	  }
-
-
-    private void CommandDriveMotor(double Le_r_NormPwrCmndLt, double Le_r_NormPwrCmndRt) {
-        VeDRV_r_NormPwrCmndLt = Le_r_NormPwrCmndLt;
-        VeDRV_r_NormPwrCmndRt = Le_r_NormPwrCmndRt;
-
-        DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, VeDRV_r_NormPwrCmndLt);
-        DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, VeDRV_r_NormPwrCmndRt);
-
+    private void cmndDrvMtr(double Le_r_NormPwrCmndLt, double Le_r_NormPwrCmndRt) {
+        DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndLt);
+		DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndRt);
+//      DriveMotor[DrvMap.LtSlv].set(ControlMode.PercentOutput, Le_r_NormPwrCmndLt);
+//      DriveMotor[DrvMap.RtSlv].set(ControlMode.PercentOutput, Le_r_NormPwrCmndRt);		
     }
-
-
-	private double applyDB_Scld(double Le_x_PwrRqstRaw, double Le_x_DB_Thrsh, double Le_x_DB_Lim) {
-		double Le_x_PwrRqstLim, Le_x_PwrRqstDBAppl;
-		double Le_x_DB_ThrshProt;
-		double Le_x_RescaleNum, Le_x_RescaleDenom;
-	   
-		Le_x_PwrRqstLim = Math.min(Le_x_PwrRqstRaw,  Le_x_DB_Lim);
-		Le_x_PwrRqstLim = Math.max(Le_x_PwrRqstLim, -Le_x_DB_Lim);
-	   
-		Le_x_DB_ThrshProt = Math.abs(Le_x_DB_Thrsh);
-		Le_x_DB_ThrshProt = Math.min(Le_x_DB_ThrshProt, Le_x_DB_Lim);
-
-		if (Math.abs(Le_x_PwrRqstLim) < Le_x_DB_ThrshProt) {
-			Le_x_PwrRqstDBAppl = 0;  
-		  }
-		else /* (Math.abs(Le_r_PwrRqstLim) >= Le_r_DB_ThrshProt) */ {
-			Le_x_RescaleDenom = Le_x_DB_Lim - Le_x_DB_ThrshProt;
-			if (Le_x_PwrRqstLim >= 0.0) {
-			  Le_x_RescaleNum = Le_x_PwrRqstLim - Le_x_DB_ThrshProt;
-			}
-			else /* (Le_r_PwrRqstLim < 0.0) */ {
-			  Le_x_RescaleNum = Le_x_PwrRqstLim + Le_x_DB_ThrshProt;
-			}
-			Le_x_PwrRqstDBAppl = (Le_x_RescaleNum/Le_x_RescaleDenom) * Le_x_DB_Lim;
-		}
-		
-		return (Le_x_PwrRqstDBAppl);
-	}    
-
-
-	private double applyDB_Zeroed(double Le_x_PwrRqstRaw, double Le_x_DB_Thrsh) {
-		double Le_x_PwrRqstLim, Le_x_PwrRqstDBAppl;
-		double Le_x_DB_ThrshProt;
-	   
-		Le_x_PwrRqstLim = Math.min(Le_x_PwrRqstRaw, 1.0);
-		Le_x_PwrRqstLim = Math.max(Le_x_PwrRqstLim, -1.0);
-	   
-		Le_x_DB_ThrshProt = Math.abs(Le_x_DB_Thrsh);
-		Le_x_DB_ThrshProt = Math.min(Le_x_DB_ThrshProt, 1.0);
-
-		if (Math.abs(Le_x_PwrRqstLim) < Le_x_DB_ThrshProt) {
-		    Le_x_PwrRqstDBAppl = 0;  
-		}
-		else /* (Math.abs(Le_r_PwrRqstLim) >= Le_r_DB_ThrshProt) */ {
-			if (Le_x_PwrRqstLim >= 0.0) {
-				Le_x_PwrRqstDBAppl = Le_x_PwrRqstLim - Le_x_DB_ThrshProt;
-			}
-			else /* (Le_r_PwrRqstLim < 0.0) */ {
-			    Le_x_PwrRqstDBAppl = Le_x_PwrRqstLim + Le_x_DB_ThrshProt;
-			}
-		}
-		
-		return(Le_x_PwrRqstDBAppl);
-	}    
-
-
-	private double applyDB_Clpd(double Le_x_PwrRqstRaw, double Le_x_DB_Thrsh) {
-		double Le_x_PwrRqstDBAppl;
-		double Le_x_DB_ThrshProt;
-	   	   
-		Le_x_DB_ThrshProt = Math.abs(Le_x_DB_Thrsh);
-
-		if (Math.abs(Le_x_PwrRqstRaw) < Le_x_DB_ThrshProt) {
-			Le_x_PwrRqstDBAppl = 0;  
-		}
-		else /* (Math.abs(Le_r_PwrRqstRaw) >= Le_r_DB_ThrshProt) */ {
-			Le_x_PwrRqstDBAppl = Le_x_PwrRqstRaw;
-		}
-		
-		return (Le_x_PwrRqstDBAppl);
-	}    
 
 
   /**
@@ -381,7 +333,9 @@ public class DriveSubsystem implements Subsystem {
 
     public void stopDrvMtrAll() {
         DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, 0);
-        DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, 0);
+		DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, 0);
+//        DriveMotor[DrvMap.LtSlv].set(ControlMode.PercentOutput, 0);
+//        DriveMotor[DrvMap.RtSlv].set(ControlMode.PercentOutput, 0);		
     }
 
 	public void captureDrvEncdrCntAll() {
@@ -407,6 +361,14 @@ public class DriveSubsystem implements Subsystem {
 		resetRotPID();
 	}
   
+	public void setDRV_r_PID_DrvPowCorr(double LeDRV_r_PID_DrvPowCorr) {
+		VeDRV_r_PID_DrvPowCorr = LeDRV_r_PID_DrvPowCorr;
+	}
+
+	public void setDRV_r_PID_RotPowCorr(double LeDRV_r_PID_RotPowCorr) {
+		VeDRV_r_PID_RotPowCorr = LeDRV_r_PID_RotPowCorr;
+	}
+
 
 
 	/*************************************************/
@@ -570,21 +532,25 @@ public class DriveSubsystem implements Subsystem {
 
 	private void updateSmartDash() {
 		/* Print to SmartDashboard */
-/*	
-		SmartDashboard.putNumber("Cntrlr Pwr Long " , VeSDRV_r_PwrLong);
-		SmartDashboard.putNumber("Cntrlr Pwr Lat " ,  VeSDRV_r_PwrLat);
-		SmartDashboard.putNumber("Cntrlr Pwr Rot " ,  VeSDRV_r_PwrRot);
-*/	
-
-/*
-		for (int i = 0; i < DrvMap.NumOfCaddies; i++)  {
 	
-		   SmartDashboard.putNumber("Drv Encdr Cnts " + i ,    SwrvDrvMod[i].getDrvEncdrCntsRel());	   
-		   SmartDashboard.putString("Drv Mtr Dir " + i ,       SwrvDrvMod[i].getDrvMtrDirctn().toString());
-		   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
-		   
+		SmartDashboard.putNumber("Pwr Rqst Fwd " ,   VeDRV_r_NormPwrRqstFwd);
+		SmartDashboard.putNumber("Pwr Rqst Rot " ,   VeDRV_r_NormPwrRqstRot);
+		SmartDashboard.putNumber("Pwr Rqst Hdg " ,   VeDRV_r_NormPwrHdgCorr);
+		SmartDashboard.putNumber("Pwr Cmnd Lt " ,    VeDRV_r_NormPwrCmndLt);
+		SmartDashboard.putNumber("Pwr Cmnd Rt " ,    VeDRV_r_NormPwrCmndRt);
+
+		SmartDashboard.putNumber("Pwr PID Drv " ,    VeDRV_r_PID_DrvPowCorr);
+		SmartDashboard.putNumber("PID SetPt Drv " ,  VeDRV_Cnt_PID_DrvPstnCmnd);
+		SmartDashboard.putNumber("Pwr PID Rot " ,    VeDRV_r_PID_RotPowCorr);
+		SmartDashboard.putNumber("PID SetPt Rot " ,  VeDRV_Deg_PID_RotAngCmnd);
+
+
+		for (int i = 0; i < DrvMap.NumOfMtrs; i++)  {	
+		   SmartDashboard.putNumber("Drv Encdr Cnts " + i ,      VaDRV_Cnt_DrvEncdrPstn[i]);	   
+		   SmartDashboard.putNumber("Drv Encdr Zero Pstn " + i , VaDRV_Cnt_DrvEncdrZeroPstn[i]);
+
+//		   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
 		}
-*/
         
 	}
 

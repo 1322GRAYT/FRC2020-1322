@@ -11,7 +11,11 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.*;
+import frc.robot.commandgroups.*;
 import frc.robot.subsystems.*;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -25,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
+  public  final pRFSLIB prfsLIB = new pRFSLIB();
+  private final SendableChooser<Command> m_chooser = new SendableChooser<Command>();
   private final DriveSubsystem driveSubsystem = new DriveSubsystem();
   private final ColorWheelSubsystem colorWheelSubsystem = new ColorWheelSubsystem();
   private final VisionSubsystem visionSubsystem = new VisionSubsystem();
@@ -32,12 +38,13 @@ public class RobotContainer {
   private final AimSubsystem aimSubsystem = new AimSubsystem();
   private final BallSubsystem ballSubsystem = new BallSubsystem();
   private final LiftSubsystem liftSubsystem = new LiftSubsystem();
-  private final ShiftSubsystem shiftSubsystem = new ShiftSubsystem();
-  
+
   private XboxController driverStick;
   private XboxController auxStick;
 
   private TurretTrigger turretTrigger = new TurretTrigger();
+
+  private Command m_autoSelected;
   
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -54,6 +61,14 @@ public class RobotContainer {
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    // Configure Autonomous Selections Available
+    m_chooser.setDefaultOption("Default Auto", new CG_InitRobot(driveSubsystem));
+    m_chooser.addOption("Do Nothing", new CG_InitRobot(driveSubsystem));
+    m_chooser.addOption("Just Shoot", new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
+    m_chooser.addOption("Drive Back 3 Ft", new CG_AutoDrvBack3(driveSubsystem));
+    m_chooser.addOption("Shoot and Drive Back 3 Ft", new CG_AutoShootDrvBack3(driveSubsystem, ballSubsystem, turretSubsystem, auxStick));
+    SmartDashboard.putData("Auto choices: ", m_chooser);
+
     // Configure the button bindings
     configureButtonBindings();
     // Configure Default Commands
@@ -97,10 +112,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     /* BEGIN DRIVER STICK BUTTON ASSIGNMENTS */
     driverStick = new XboxController(0);
-    // Shifter Command (Y for high gear, X for low gear)
-    new JoystickButton(driverStick, 6).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.HIGH_GEAR));
-    new JoystickButton(driverStick, 5).whenPressed(new ShiftCommand(shiftSubsystem, DriveShiftPos.LOW_GEAR));
 
+    
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
     auxStick = new XboxController(1);
     // Manual Shoot
@@ -112,13 +125,30 @@ public class RobotContainer {
 
 
   /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
+   * Use this to pass the Autonomous Command(S) for Autonomous Init to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
   
-  public Command getAutonomousCommand() {
-    // An ExampleCommand will run in autonomous
-    return new ManualShoot(ballSubsystem, turretSubsystem, auxStick);
+  public Command getAutonomousInitCommand() {
+      // An ExampleCommand will run in autonomous
+      m_autoSelected = m_chooser.getSelected(); 
+      System.out.println("Auto selected: " + m_autoSelected);
+      return(m_autoSelected);
   }
+
+
+  /**
+   * Use this to pass the Autonomous Command(s) for Periodic Autonomous to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+/*  
+  public Command getAutonomousPeriodicCommand() {
+      // An ExampleCommand will run in autonomous
+      return(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
+  }
+*/
+
+
 }

@@ -21,20 +21,20 @@ public class K_DRV {
 	  /** KeDRV_b_DebugEnbl: Swerve Drive System Enable
      *  Calibartion to send data to dashbord to debug.
      */
-    public static final boolean KeDRV_b_DebugEnbl = false;
+    public static final boolean KeDRV_b_DebugEnbl = true;
 
 
   /**************************************************/
   /*  Swerve Drive General System Calibrations      */
  	/**************************************************/	 	
 
-	  /** KeDRV_r_CntlrDeadBandFwd: Tank Drive System: Normalized Power
+	  /** KeDRV_r_DB_CntlrThrshFwd: Tank Drive System: Normalized Power
      * Dead-Band Threshold that must be met before a X-Box Controller
      * Joystick Input is recognized for Forward/Rearward Commands.
      * If the Absolute value of the Input is below the Threshold it
      * will be ignored (i.e. set to Zero).
      */
-    public static final double KeDRV_r_CntlrDeadBandFwd = 0.2;
+    public static final double KeDRV_r_DB_CntlrThrshFwd = 0.2;
 
 	  /** KeDRV_r_DB_CntlrThrshRot: Tank Drive System: Normalized Power
      * Dead-Band Threshold that must be met before a X-Box Controller
@@ -50,7 +50,7 @@ public class K_DRV {
      * Override any Rotation Request for stability.  Does not include
      * Closed-Loop Drive Heading Control.
      */
-    public static final double KeDRV_r_DrvRqstOvrrdFwd = 0.4;
+    public static final double KeDRV_r_DrvRqstOvrrdFwd = 0.8;
 
 
 	  /** KeDRV_r_DrvRqstOvrrdRot: Tank Drive System: Scaled Normalized Power
@@ -58,7 +58,15 @@ public class K_DRV {
      * Override Forward/Rearward Requests for stability, as long as the
      * Forward/Rearward Request is less than KeDRV_r_DrvRqstOvrrdFwd.
      */
-    public static final double KeDRV_r_DrvRqstOvrrdRot = 0.4;
+    public static final double KeDRV_r_DrvRqstOvrrdRot = 0.3;
+
+
+	  /** KeDRV_r_DrvNormPwrLimMaxDelt: Tank Drive System: Scaled Normalized Power
+     * Max Limit in Delta Normalized Power per 20msec use to prevent over-Driving
+     * the Motors and Drivers and causing the Drive System to Jerk too Aggressively.
+     */
+    public static final float KeDRV_r_DrvNormPwrLimMaxDelt = (float)0.08; // 0.08 equates to 0 to 1 in 250 msec
+
 
 
 
@@ -100,7 +108,7 @@ public class K_DRV {
 	  /** KeDRV_K_DrvProp: Tank Drive System Drive Control
      * Proporational Control Gain. 
      */
-    public static final double KeDRV_K_DrvProp = 2.0;
+    public static final double KeDRV_K_DrvProp = 1.0;
 
 
 	  /** KeDRV_K_DrvPropIntgl: Tank Drive System Drive Control
@@ -244,7 +252,7 @@ public class K_DRV {
     * Heading Tracking (Left/Right Correction) of
     * Longitudinal Drive control (Forward/Reward).
     */
-    public static final double KeDRV_k_DrvPropGxRot = 1;
+    public static final double KeDRV_k_CL_DrvPropGxRot = 1;
 
 
   /** KeDRV_k_CL_DrvIntglGxRot: Tank Drive System - 

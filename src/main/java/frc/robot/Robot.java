@@ -25,6 +25,8 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
+
+
   
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -72,14 +74,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
-    // schedule the autonomous command (example)
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
-
-//      new SDRV_RotInitRobot_CG(m_robotContainer.getSwerveDriveSubsystem()).schedule();
-    }
+		  m_autonomousCommand = m_robotContainer.getAutonomousInitCommand();
+      // schedule the autonomous command
+      if (m_autonomousCommand != null) {
+          m_autonomousCommand.schedule();
+      }
+//    new SDRV_RotInitRobot_CG(m_robotContainer.getSwerveDriveSubsystem()).schedule();
   }
 
   /**
@@ -87,7 +87,13 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
+//	    m_autonomousCommand = m_robotContainer.getAutonomousPeriodicCommand();
+      // schedule the autonomous command
+      if (m_autonomousCommand != null) {
+          m_autonomousCommand.schedule();
+      }
   }
+
 
   @Override
   public void teleopInit() {
