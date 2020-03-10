@@ -34,9 +34,9 @@ public class DriveSubsystem extends SubsystemBase {
 	private double VeDRV_Deg_NAV_DsrdAng;
 
     private TalonFX[] DriveMotor = new TalonFX[] { 
-		new TalonFX(Constants.DRV_RT_FR),
 		new TalonFX(Constants.DRV_LT_FR),
 		new TalonFX(Constants.DRV_LT_RR),
+		new TalonFX(Constants.DRV_RT_FR),
 		new TalonFX(Constants.DRV_RT_RR)
 	};
 
@@ -73,19 +73,12 @@ public class DriveSubsystem extends SubsystemBase {
     /*******************************/
 	public DriveSubsystem() {
 
+		/* Gyro Initialization */
 		zeroGyro();
 		captureGyroAngRaw(); 
         VeDRV_Deg_NAV_DsrdAng =  VeDRV_Deg_NAV_SnsdAng;
 
-        DriveMotor[DrvMap.RtSlv].follow(DriveMotor[DrvMap.RtMstr]);
-        DriveMotor[DrvMap.LtSlv].follow(DriveMotor[DrvMap.LtMstr]);		
-
-		for (int i = 0; i < DrvMap.NumOfMtrs; i++) {		
-			VaDRV_b_MtrInvrtd[i] = false;
-			captureDrvEncdrCntAll();
-            VaDRV_Cnt_DrvEncdrZeroPstn[i] = VaDRV_Cnt_DrvEncdrPstn[i];
-		}
-
+		/* X-Box Controller and Drive Power Initialization */
         VeDRV_r_NormPwrRqstFwd = 0;
 		VeDRV_r_NormPwrRqstRot = 0;
 		VeDRV_r_NormPwrHdgCorr = 0;
@@ -93,15 +86,14 @@ public class DriveSubsystem extends SubsystemBase {
         VeDRV_r_NormPwrCmndLt  = 0;
         VeDRV_r_NormPwrCmndRt  = 0;    
 
-
-	/* Drive Control PID*/
+	    /* Drive Control PID*/
 	    VsDRV_PID_Drv = new PIDController(K_DRV.KeDRV_k_CL_DrvPropGxFwd,  K_DRV.KeDRV_k_CL_DrvIntglGxFwd,  K_DRV.KeDRV_k_CL_DrvDerivGxFwd);
 	    VeDRV_r_PID_DrvPowCorr    =  0;
         VeDRV_r_PID_DrvPwrOutMin  = -1;
         VeDRV_r_PID_DrvPwrOutMax  =  1;
         VeDRV_Cnt_PID_DrvPstnCmnd =  0;
 
-	/* Rotation Control PID*/
+	    /* Rotation Control PID*/
 		VsDRV_PID_Rot  = new PIDController(K_DRV.KeDRV_k_CL_RotPropGx,  K_DRV.KeDRV_k_CL_RotIntglGx,  K_DRV.KeDRV_k_CL_RotDerivGx);
         VeDRV_r_PID_RotPowCorr    =  0;
 		VeDRV_r_PID_RotPwrOutMin  = -1;
@@ -110,12 +102,24 @@ public class DriveSubsystem extends SubsystemBase {
 
 
         /*****************************************************************/
-        /* Drive Control PID Controller Configurations */
-        /*****************************************************************/
+        /* Drive Controller Configurations                               */
+		/*****************************************************************/
         for (int i = 0; i < DrvMap.NumOfMtrs; i++) {
-            DriveMotor[i].configFactoryDefault();
-            DriveMotor[i].setInverted(false);
-            DriveMotor[i].setSensorPhase(false);
+			DriveMotor[i].configFactoryDefault();
+            DriveMotor[i].setInverted(false);			
+			DriveMotor[i].setSensorPhase(false);
+		}
+		
+		  DriveMotor[DrvMap.RtMstr].setInverted(true);
+		  DriveMotor[DrvMap.RtSlv].setInverted(true);
+		  
+          DriveMotor[DrvMap.RtSlv].follow(DriveMotor[DrvMap.RtMstr]);
+          DriveMotor[DrvMap.LtSlv].follow(DriveMotor[DrvMap.LtMstr]);
+
+        for (int i = 0; i < DrvMap.NumOfMtrs; i++) {
+			setDrvInvrtd(i, DriveMotor[i].getInverted());		
+            captureDrvEncdrCntAll();
+			VaDRV_Cnt_DrvEncdrZeroPstn[i] = VaDRV_Cnt_DrvEncdrPstn[i];			
         }
 
     }
@@ -295,10 +299,8 @@ public class DriveSubsystem extends SubsystemBase {
      * @param Le_r_NormPwrCmndRt  (double:  Drive Motor Normalized Power Command - Right-Side Motors)
      */
     private void cmndDrvMtr(double Le_r_NormPwrCmndLt, double Le_r_NormPwrCmndRt) {
-        DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndLt);
-		DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndRt);
-//      DriveMotor[DrvMap.LtSlv].set(ControlMode.PercentOutput, Le_r_NormPwrCmndLt);
-//      DriveMotor[DrvMap.RtSlv].set(ControlMode.PercentOutput, Le_r_NormPwrCmndRt);		
+		DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndLt);
+        DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, Le_r_NormPwrCmndRt);
     }
 
 
@@ -311,7 +313,7 @@ public class DriveSubsystem extends SubsystemBase {
     private void setDrvInvrtd(int Le_e_MtrIdx, boolean Le_b_DrvMtrInvrtd) {
 		VaDRV_b_MtrInvrtd[Le_e_MtrIdx] = Le_b_DrvMtrInvrtd;
 	}
-
+	
 	private void captureDrvEncdrCnt(int Le_e_MtrIdx) {
 		VaDRV_Cnt_DrvEncdrPstn[Le_e_MtrIdx] = (int)Math.round(DriveMotor[Le_e_MtrIdx].getSelectedSensorPosition());
 	}  
@@ -334,8 +336,6 @@ public class DriveSubsystem extends SubsystemBase {
     public void stopDrvMtrAll() {
         DriveMotor[DrvMap.LtMstr].set(ControlMode.PercentOutput, 0);
 		DriveMotor[DrvMap.RtMstr].set(ControlMode.PercentOutput, 0);
-//        DriveMotor[DrvMap.LtSlv].set(ControlMode.PercentOutput, 0);
-//        DriveMotor[DrvMap.RtSlv].set(ControlMode.PercentOutput, 0);		
     }
 
 	public void captureDrvEncdrCntAll() {
@@ -382,8 +382,7 @@ public class DriveSubsystem extends SubsystemBase {
       * @return Le_b_DrvMtrInvrtd   (boolean: Drive Motor Speed Inverted Indication)
       */
     public boolean getDrvInvrtd(int Le_e_MtrIdx) {
-		boolean Le_b_DrvMtrInvrtd; 
-		Le_b_DrvMtrInvrtd = VaDRV_b_MtrInvrtd[Le_e_MtrIdx];
+		boolean Le_b_DrvMtrInvrtd = VaDRV_b_MtrInvrtd[Le_e_MtrIdx];
 		return(Le_b_DrvMtrInvrtd);
 	}
 

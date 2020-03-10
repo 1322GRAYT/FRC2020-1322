@@ -38,10 +38,10 @@ public final class Constants {
     /* MOTOR CAN ADDRESS ASSIGNMENTS */
     // NOTE: These are tentative and are subject to change
     // Drive Motors (TALON FX)
-    public static final int DRV_RT_FR               = 4;
-    public static final int DRV_LT_FR               = 2;
-    public static final int DRV_LT_RR               = 3;
-    public static final int DRV_RT_RR               = 1;
+    public static final int DRV_LT_FR               = 3;  //*  Front Left
+    public static final int DRV_LT_RR               = 2;  //*  Rear  Left   (Correct)
+    public static final int DRV_RT_FR               = 4;  //*  Front Right  (Inverted)
+    public static final int DRV_RT_RR               = 1;  //*  Rear Right   (Inverted)
     // Shooter Motors (SPARK MAX)
     public static final int SHOOTER_ONE             = 4;
     public static final int SHOOTER_TWO             = 5;

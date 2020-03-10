@@ -50,7 +50,7 @@ public class K_DRV {
      * Override any Rotation Request for stability.  Does not include
      * Closed-Loop Drive Heading Control.
      */
-    public static final double KeDRV_r_DrvRqstOvrrdFwd = 0.8;
+    public static final double KeDRV_r_DrvRqstOvrrdFwd = 2.0;
 
 
 	  /** KeDRV_r_DrvRqstOvrrdRot: Tank Drive System: Scaled Normalized Power
@@ -58,7 +58,7 @@ public class K_DRV {
      * Override Forward/Rearward Requests for stability, as long as the
      * Forward/Rearward Request is less than KeDRV_r_DrvRqstOvrrdFwd.
      */
-    public static final double KeDRV_r_DrvRqstOvrrdRot = 0.3;
+    public static final double KeDRV_r_DrvRqstOvrrdRot = -1.0;
 
 
 	  /** KeDRV_r_DrvNormPwrLimMaxDelt: Tank Drive System: Scaled Normalized Power

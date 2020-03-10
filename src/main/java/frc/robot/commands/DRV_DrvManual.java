@@ -33,6 +33,7 @@ public class DRV_DrvManual extends CommandBase {
   public DRV_DrvManual(DriveSubsystem driveSubsystem, XboxController driverStick) {
       this.driveSubsystem = driveSubsystem;
       this.driverStick = driverStick;
+      driveSubsystem.resetDrvEncdrPstnAll();
       Xe_Deg_HdgAngInit = driveSubsystem.getGyroAngRaw();
       Xe_b_HdgAngUpd = false;
       addRequirements(this.driveSubsystem);
@@ -41,6 +42,7 @@ public class DRV_DrvManual extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+      driveSubsystem.resetDrvZeroPstnAll();
       driveSubsystem.resetRotPID();
       driveSubsystem.configPID_RotCtrlHdgCorr(Xe_Deg_HdgAngInit);
   }
@@ -48,6 +50,8 @@ public class DRV_DrvManual extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+      driveSubsystem.captureDrvEncdrCntAll();
+
       Xe_r_LongPwr = -driverStick.getY(Hand.kLeft);
       Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
 

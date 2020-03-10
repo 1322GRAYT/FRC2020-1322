@@ -12,10 +12,10 @@ package frc.robot;
  * Drive Motor to an integer value for array indexing.
  */
 public class DrvMap {
-  public static final int RtMstr = 0; // Drive Motor: Right Master
-  public static final int RtSlv  = 1; // Drive Motor: Right Slave
-  public static final int LtMstr = 2; // Drive Motor: Left Master
-  public static final int LtSlv  = 3; // Drive Motor: Left Slave
+  public static final int LtMstr = 0; // Drive Motor: Left Master
+  public static final int LtSlv  = 1; // Drive Motor: Left Slave
+  public static final int RtMstr = 2; // Drive Motor: Right Master
+  public static final int RtSlv  = 3; // Drive Motor: Right Slave
   public static final int NumOfMtrs = 4; //Total Number of Motors
 
   public static final int RtAssy = 0; // Drive Assembly: Right Drive Motor Assembly
