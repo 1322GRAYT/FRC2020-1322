@@ -84,12 +84,18 @@ public class BallSubsystem extends SubsystemBase {
 
     // If We have a ball at the intake, and none at the output, lets run the advance to move it
     if(this.intakeSensorStatus && !this.outputSensorStatus){
-      runAdvance(.4);
-      runAdvanceAutonomously = true;
+        runAdvance(.4);
+        runAdvanceAutonomously = true;
     } 
-    if(!this.intakeSensorStatus && runAdvanceAutonomously) {
-      runAdvance(0);
-      runAdvanceAutonomously = false;
+    // If we are running the advance and no longer have a ball at Intake, stop advance.
+    else if(runAdvanceAutonomously && !this.intakeSensorStatus) {
+        runAdvance(0);
+        runAdvanceAutonomously = false;
+    }
+    // If we are running the advance an detect a ball at the output, stop the advance.
+    else if (runAdvanceAutonomously && this.outputSensorStatus)  {
+        runAdvance(0);
+        runAdvanceAutonomously = false;
     }
 
     // Update SmartDashboard

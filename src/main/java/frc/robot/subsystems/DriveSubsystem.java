@@ -8,6 +8,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import edu.wpi.first.wpilibj.SPI;
@@ -108,13 +109,14 @@ public class DriveSubsystem extends SubsystemBase {
 			DriveMotor[i].configFactoryDefault();
             DriveMotor[i].setInverted(false);			
 			DriveMotor[i].setSensorPhase(false);
+			DriveMotor[i].setNeutralMode(NeutralMode.Brake);
 		}
 		
-		  DriveMotor[DrvMap.RtMstr].setInverted(true);
-		  DriveMotor[DrvMap.RtSlv].setInverted(true);
+		DriveMotor[DrvMap.RtMstr].setInverted(true);
+		DriveMotor[DrvMap.RtSlv].setInverted(true);
 		  
-          DriveMotor[DrvMap.RtSlv].follow(DriveMotor[DrvMap.RtMstr]);
-          DriveMotor[DrvMap.LtSlv].follow(DriveMotor[DrvMap.LtMstr]);
+        DriveMotor[DrvMap.RtSlv].follow(DriveMotor[DrvMap.RtMstr]);
+        DriveMotor[DrvMap.LtSlv].follow(DriveMotor[DrvMap.LtMstr]);
 
         for (int i = 0; i < DrvMap.NumOfMtrs; i++) {
 			setDrvInvrtd(i, DriveMotor[i].getInverted());		
@@ -198,7 +200,7 @@ public class DriveSubsystem extends SubsystemBase {
 
 	    if (K_DRV.KeDRV_b_DebugEnbl == true)  {
 	        updateSmartDash();	
-	  }
+	    }
 	
 	}
 
@@ -532,6 +534,9 @@ public class DriveSubsystem extends SubsystemBase {
 	private void updateSmartDash() {
 		/* Print to SmartDashboard */
 	
+		SmartDashboard.putNumber("Gyro Snsd Ang " ,  VeDRV_Deg_NAV_SnsdAng);
+		SmartDashboard.putNumber("Gyro Dsrd Ang " ,  VeDRV_Deg_NAV_DsrdAng);
+
 		SmartDashboard.putNumber("Pwr Rqst Fwd " ,   VeDRV_r_NormPwrRqstFwd);
 		SmartDashboard.putNumber("Pwr Rqst Rot " ,   VeDRV_r_NormPwrRqstRot);
 		SmartDashboard.putNumber("Pwr Rqst Hdg " ,   VeDRV_r_NormPwrHdgCorr);
@@ -547,6 +552,7 @@ public class DriveSubsystem extends SubsystemBase {
 		for (int i = 0; i < DrvMap.NumOfMtrs; i++)  {	
 		   SmartDashboard.putNumber("Drv Encdr Cnts " + i ,      VaDRV_Cnt_DrvEncdrPstn[i]);	   
 		   SmartDashboard.putNumber("Drv Encdr Zero Pstn " + i , VaDRV_Cnt_DrvEncdrZeroPstn[i]);
+		   SmartDashboard.putNumber("Drvn Encdr Dist " + i ,     getDrvDistance(i));
 
 //		   SmartDashboard.putBoolean("Drv Mtr Dir Trig " + i , SwrvDrvMod[i].getDrvMtrDirctnTrig());
 		}

@@ -55,8 +55,8 @@ public class DRV_DrvManual extends CommandBase {
       Xe_r_LongPwr = -driverStick.getY(Hand.kLeft);
       Xe_r_RotPwr  =  driverStick.getX(Hand.kRight);
 
-      Xe_r_LongPwr = rfsLIB.ApplyDB_Clpd(Xe_r_LongPwr, K_DRV.KeDRV_r_DB_CntlrThrshRot);
-      Xe_r_RotPwr  = rfsLIB.ApplyDB_Clpd(Xe_r_RotPwr, K_DRV.KeDRV_r_DB_CntlrThrshRot);
+      Xe_r_LongPwr = rfsLIB.ApplyDB_Scld(Xe_r_LongPwr, K_DRV.KeDRV_r_DB_CntlrThrshRot, 1.0);
+      Xe_r_RotPwr  = rfsLIB.ApplyDB_Scld(Xe_r_RotPwr, K_DRV.KeDRV_r_DB_CntlrThrshRot, 1.0);
 
       if ((Math.abs(Xe_r_LongPwr) < K_DRV.KeDRV_r_DB_CntlrThrshFwd) &&
           (Math.abs(Xe_r_RotPwr)  < K_DRV.KeDRV_r_DB_CntlrThrshRot)) {
@@ -85,6 +85,17 @@ public class DRV_DrvManual extends CommandBase {
       }
       driveSubsystem.setDRV_r_PID_RotPowCorr(Xe_r_RotPwrHdgCorr);
       driveSubsystem.TankDrive(Xe_r_LongPwr, Xe_r_RotPwr, Xe_r_RotPwrHdgCorr);
+
+      if (K_DRV.KeDRV_b_DebugEnbl == true)  {
+	      SmartDashboard.putNumber("DMnl Pwr Long " ,  Xe_r_LongPwr);
+	      SmartDashboard.putNumber("DMnl Pwr Rot " ,  Xe_r_RotPwr);
+	      SmartDashboard.putNumber("DMnl Pwr Corr " ,  Xe_r_RotPwrHdgCorr);
+	      SmartDashboard.putNumber("DMnl Hdg Init " ,  Xe_Deg_HdgAngInit);
+	      SmartDashboard.putNumber("DMnl Hdg Err " ,  Xe_Deg_HdgAngErr);
+		  SmartDashboard.putBoolean("DMnl Hdg Upd" ,  Xe_b_HdgAngUpd);
+      }
+
+
   }
 
   // Called once the command ends or is interrupted.
