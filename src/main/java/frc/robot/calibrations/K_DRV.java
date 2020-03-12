@@ -34,7 +34,7 @@ public class K_DRV {
      * If the Absolute value of the Input is below the Threshold it
      * will be ignored (i.e. set to Zero).
      */
-    public static final double KeDRV_r_DB_CntlrThrshFwd = 0.2;
+    public static final double KeDRV_r_DB_CntlrThrshFwd = 0.1;
 
 	  /** KeDRV_r_DB_CntlrThrshRot: Tank Drive System: Normalized Power
      * Dead-Band Threshold that must be met before a X-Box Controller
@@ -42,7 +42,7 @@ public class K_DRV {
      * If the Absolute value of the Input is below the Threshold it
      * will be ignored (i.e. set to Zero).
      */
-    public static final double KeDRV_r_DB_CntlrThrshRot = 0.2;
+    public static final double KeDRV_r_DB_CntlrThrshRot = 0.1;
 
 
 	  /** KeDRV_r_DrvRqstOvrrdFwd: Tank Drive System: Scaled Normalized Power
@@ -50,7 +50,7 @@ public class K_DRV {
      * Override any Rotation Request for stability.  Does not include
      * Closed-Loop Drive Heading Control.
      */
-    public static final double KeDRV_r_DrvRqstOvrrdFwd = 2.0;
+    public static final double KeDRV_r_DrvRqstOvrrdFwd = 0.5;
 
 
 	  /** KeDRV_r_DrvRqstOvrrdRot: Tank Drive System: Scaled Normalized Power

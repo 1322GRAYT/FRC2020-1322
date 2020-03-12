@@ -9,7 +9,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.Constants.*;
+import frc.robot.Constants;
 import frc.robot.commands.*;
 import frc.robot.commandgroups.*;
 import frc.robot.subsystems.*;
@@ -89,19 +89,6 @@ public class RobotContainer {
     return(driveSubsystem);
     }    
 
-
-
-  /* X-Box Controller Number Assignments */
-  /* 1:  Button A
-     2:  Button B
-     3:  Button X
-     4:  Button Y
-     5:  Bumper Left
-     6:  Bumper Right
-     7:  Button Back  (Left)
-     8:  Button Start (Right)
-     9:  Joystick Press Left
-     10: Joystick Press Right
 
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by

@@ -71,6 +71,7 @@ public class DRV_RotToAngAbs extends CommandBase {
   @Override
   public void end(boolean interrupted) {
       driveSubsystem.stopDrvMtrAll();
+      Xe_t_SyncTmr.stop();
   }
 
   // Returns true when the command should end.
