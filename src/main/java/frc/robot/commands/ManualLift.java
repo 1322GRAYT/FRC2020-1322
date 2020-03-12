@@ -37,7 +37,7 @@ public class ManualLift extends CommandBase {
   @Override
   public void execute() {
     // Right Trigger to go forward, Select button to go backwards
-    double liftPower = (auxStick.getRawAxis(3)) - (auxStick.getRawButton(7)?1:0);
+    double liftPower = (auxStick.getRawAxis(Constants.TRIGGERS)) - (auxStick.getRawButton(Constants.BUTTON_BACK)?1:0);
     liftSubsystem.runLift(liftPower);
 
     int dPadPos = auxStick.getPOV();

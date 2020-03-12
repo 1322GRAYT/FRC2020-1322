@@ -27,6 +27,23 @@ public class RFSLIB extends SubsystemBase {
 	}    
 
 
+
+   /*********************************/
+   /* Normalization Function        */
+   /*********************************/
+   	
+   /** Method: limRateOnInc - This function will rate limit an increase
+	  *  delta command based on a maximum limit threshold in delta units
+	  * per loop.
+      * @param: La_x_ValDsrd[]   (double: )
+      * @param: Le_x_ValNormMax, (double: )
+	  * @return: La_x_ValDsrd[]  (double: ) */	
+	  public double[] NormArrayVals(double La_x_ValDsrd[], double Le_x_ValNormMax) {
+		return(pRFSLIB.NormArrayVals(this, La_x_ValDsrd, Le_x_ValNormMax));
+	}	
+
+
+
 	/*********************************/
 	/* Rate Limiting Functions       */
     /*********************************/	

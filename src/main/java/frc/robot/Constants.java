@@ -95,4 +95,30 @@ public final class Constants {
     public static final double LOWER_INTAKE_TIME_SEC = .5;
     public static final double LOWER_INTAKE_SPEED = .5;
     public static final double RAISE_INTAKE_SPEED = 1;
+
+
+    /* X-BOX CONTROLLER MAPPING */
+    // Controller Assignments
+    public static final int DRVR_CNTRLR       =  0;
+    public static final int AUX_CNTRLR        =  1;
+    // Button Assignments
+    public static final int BUTTON_A          =  1;
+    public static final int BUTTON_B          =  2;
+    public static final int BUTTON_X          =  3;
+    public static final int BUTTON_Y          =  4;
+    public static final int BUMPER_LEFT       =  5;
+    public static final int BUMPER_RIGHT      =  6;
+    public static final int BUTTON_BACK       =  7;  // LEFT(SELECT)
+    public static final int BUTTON_START      =  8;  // RIGHT
+    public static final int STICK_LEFT_PRESS  =  9;  // JOYSTICK PRESS
+    public static final int STICK_RIGHT_PRESS = 10;  // JOYSTICK PRESS
+    // Analog Assignments
+    public static final int STICK_LEFT_XAXIS  = 1;
+    public static final int STICK_LEFT_YAXIS  = 2;
+    public static final int TRIGGERS          = 3;
+    public static final int STICK_RIGHT_XAXIS = 4;
+    public static final int STICK_RIGHT_YAXIS = 5;
+    public static final int DPAD              = 6;
+
+
 }

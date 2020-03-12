@@ -111,16 +111,16 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     /* BEGIN DRIVER STICK BUTTON ASSIGNMENTS */
-    driverStick = new XboxController(0);
+    driverStick = new XboxController(Constants.DRVR_CNTRLR);
 
     
     /* BEGIN AUXILLARY STICK BUTTON ASSIGNMENTS */
-    auxStick = new XboxController(1);
+    auxStick = new XboxController(Constants.AUX_CNTRLR);
     // Manual Shoot
-    new JoystickButton(auxStick, 3).whenPressed(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
+    new JoystickButton(auxStick, Constants.BUTTON_X).whenPressed(new ManualShoot(ballSubsystem, turretSubsystem, auxStick));
     // Color Wheel Commands (Start for Gain All control)
-    new JoystickButton(auxStick, 8).whenPressed(new GainFullColorWheelCtrl(colorWheelSubsystem));
-    new JoystickButton(auxStick, 7).whenPressed(new RetractColorWheel(colorWheelSubsystem));
+    new JoystickButton(auxStick, Constants.BUTTON_START).whenPressed(new GainFullColorWheelCtrl(colorWheelSubsystem));
+    new JoystickButton(auxStick, Constants.BUTTON_BACK).whenPressed(new RetractColorWheel(colorWheelSubsystem));
   }
 
 

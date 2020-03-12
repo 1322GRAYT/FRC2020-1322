@@ -50,7 +50,7 @@ public class DRV_RotToAngAbs extends CommandBase {
   public void execute() {	  
       Xe_Deg_RotAngErr = Xe_Deg_RotAngTgt - driveSubsystem.getGyroAngRaw();
       Xe_r_RotPwr = driveSubsystem.PID_RotCtrl(Xe_Deg_RotAngErr);
-      driveSubsystem.setDRV_r_PID_DrvPowCorr(Xe_r_RotPwr);
+      driveSubsystem.setDRV_r_PID_RotPowCorr(Xe_r_RotPwr);
  
       driveSubsystem.TankDrive(0, Xe_r_RotPwr, 0);
 

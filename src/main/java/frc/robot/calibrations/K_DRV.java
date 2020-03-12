@@ -65,7 +65,7 @@ public class K_DRV {
      * Max Limit in Delta Normalized Power per 20msec use to prevent over-Driving
      * the Motors and Drivers and causing the Drive System to Jerk too Aggressively.
      */
-    public static final float KeDRV_r_DrvNormPwrLimMaxDelt = (float)0.08; // 0.08 equates to 0 to 1 in 250 msec
+    public static final float KeDRV_r_DrvNormPwrLimMaxDelt = (float)0.04; // 0.04 equates to 0 to 1 in 500 msec
 
 
 

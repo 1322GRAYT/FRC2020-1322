@@ -88,6 +88,37 @@ public class pRFSLIB extends SubsystemBase {
 
 
 
+   /*********************************/
+   /* Normalization Function        */
+   /*********************************/
+
+   /** Method: limRateOnInc - This function will rate limit an increase
+	  *  delta command based on a maximum limit threshold in delta units
+	  * per loop.
+      * @param: rfsLIB           (RFSLIB: )
+      * @param: La_x_ValDsrd[]   (double: )
+      * @param: Le_x_ValNormMax, (double: )
+	  * @return: La_x_ValDsrd[]  (double: ) */	
+	public static double[] NormArrayVals(RFSLIB rfsLIB, double La_x_ValDsrd[], double Le_x_ValNormMax) {
+		double Le_x_ValDtctdMax, Le_x_ValNormMaxAbs;
+		double[] La_x_ValDsrdNorm = new double[(int)La_x_ValDsrd.length];
+		Le_x_ValDtctdMax = Math.abs(La_x_ValDsrd[0]);
+		Le_x_ValNormMaxAbs = Math.abs(Le_x_ValNormMax);
+
+		for (int i = 0; i < La_x_ValDsrd.length; i++)  {
+			Le_x_ValDtctdMax = Math.max(Le_x_ValDtctdMax, Math.abs(La_x_ValDsrd[i]));
+			La_x_ValDsrdNorm[i] = La_x_ValDsrd[i];
+		}
+	
+		if (Le_x_ValDtctdMax > Le_x_ValNormMaxAbs) {
+		    for (int i = 0; i < La_x_ValDsrd.length; i++) {
+			    La_x_ValDsrdNorm[i] = La_x_ValDsrd[i]/Le_x_ValDtctdMax;
+			}
+		}
+		return(La_x_ValDsrd);
+	}	
+
+
 
 	/*********************************/
 	/* Rate Limiting Functions       */

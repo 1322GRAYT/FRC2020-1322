@@ -34,8 +34,10 @@ public class ManualIntakeLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    boolean intakeBallHold = (ballSubsystem.getBallSensorIntake() && ballSubsystem.getBallSensorOutput());
+
     double powerIntake = auxStick.getY(Hand.kRight);
-    if(powerIntake > .1) { // && !ballSubsystem.getBallSensorOuput()) { // Disabled because sensor is dead
+    if((powerIntake > .1) && !intakeBallHold) {  
       ballSubsystem.runIntake(powerIntake);
     } else if (powerIntake < -.1) {
       ballSubsystem.runIntake(powerIntake);
