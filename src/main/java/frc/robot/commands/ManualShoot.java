@@ -7,12 +7,15 @@
 
 package frc.robot.commands;
 
+import frc.robot.calibrations.K_BALL;
+import frc.robot.subsystems.BallSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
+
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.BallSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
+
 
 public class ManualShoot extends CommandBase {
   BallSubsystem ballSubsystem;
@@ -43,8 +46,8 @@ public class ManualShoot extends CommandBase {
   public void execute() {
     // When shooter is at speed, shoot the balls, otherwise dont.
     if(turretSubsystem.isShooterAtSpeed()){
-      ballSubsystem.runAdvance(0.85);
-      ballSubsystem.runIntake(0.85);
+      ballSubsystem.runAdvance(K_BALL.KeBAL_r_NormPwrAdvShoot);
+      ballSubsystem.runIntake(K_BALL.KeBAL_r_NormPwrIntakeShoot);
       shooterShutOffTimer.start();
     }
     else{

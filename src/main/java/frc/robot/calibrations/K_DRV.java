@@ -19,7 +19,7 @@ public class K_DRV {
  	/**************************************************/	 	
 
 	  /** KeDRV_b_DebugEnbl: Swerve Drive System Enable
-     *  Calibartion to send data to dashbord to debug.
+     *  Calibration to send data to dashboard to debug.
      */
     public static final boolean KeDRV_b_DebugEnbl = true;
 

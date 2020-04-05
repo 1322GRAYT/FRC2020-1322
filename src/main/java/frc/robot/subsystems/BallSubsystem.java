@@ -10,11 +10,14 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+import frc.robot.Constants;
+import frc.robot.calibrations.K_BALL;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+
 
 public class BallSubsystem extends SubsystemBase {
 
@@ -84,7 +87,7 @@ public class BallSubsystem extends SubsystemBase {
 
       // If We have a ball at the intake, and none at the output, lets run the advance to move it
       if(this.intakeSensorStatus && !this.outputSensorStatus){
-          runAdvance(0.375);
+          runAdvance(K_BALL.KeBAL_r_NormPwrAdvLoad);
           runAdvanceAutonomously = true;
       } 
       // If we are running the advance and no longer have a ball at Intake, stop advance.
