@@ -7,11 +7,14 @@
 
 package frc.robot.commands;
 
+import frc.robot.calibrations.K_BALL;
+import frc.robot.subsystems.BallSubsystem;
+import frc.robot.subsystems.BallSubsystem.IntakeLiftPosition;
+
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.BallSubsystem;
-import frc.robot.subsystems.BallSubsystem.IntakeLiftPosition;
+
 
 public class ManualIntakeLift extends CommandBase {
   private BallSubsystem ballSubsystem;
@@ -34,11 +37,13 @@ public class ManualIntakeLift extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    boolean intakeBallHold = (ballSubsystem.getBallSensorIntake() && ballSubsystem.getBallSensorOutput());
+
     double powerIntake = auxStick.getY(Hand.kRight);
-    if(powerIntake > .1 && !ballSubsystem.getBallSensorOuput()) {
-      ballSubsystem.runIntake(powerIntake);
+    if((powerIntake > .1) && !intakeBallHold) {  
+      ballSubsystem.runIntake(K_BALL.KeBAL_r_NormPwrIntakeLoad);  /* Intake Ball at Constant Speed */
     } else if (powerIntake < -.1) {
-      ballSubsystem.runIntake(powerIntake);
+      ballSubsystem.runIntake(powerIntake);  /* Clear Ball at Variable Speed */
     } else {
       ballSubsystem.runIntake(0);
     }

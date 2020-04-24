@@ -7,24 +7,29 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.calibrations.K_BALL;
 import frc.robot.subsystems.BallSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+
+
 public class ManualShoot extends CommandBase {
   BallSubsystem ballSubsystem;
-  TurretSubsystem shooterSubsystem;
+  TurretSubsystem turretSubsystem;
   private XboxController auxStick;
+  Timer shooterShutOffTimer = new Timer();
 
   /**
    * Creates a new ManualShoot Command.
    */
-  public ManualShoot(BallSubsystem bs, TurretSubsystem ss, XboxController auxStick) {
-    addRequirements(bs, ss);
+  public ManualShoot(BallSubsystem bs, TurretSubsystem ts, XboxController auxStick) {
+    addRequirements(bs, ts);
     ballSubsystem = bs;
-    shooterSubsystem = ss;
+    turretSubsystem = ts;
     this.auxStick = auxStick;
   }
 
@@ -32,31 +37,43 @@ public class ManualShoot extends CommandBase {
   @Override
   public void initialize() {
     // Turn the shooter on to what we want it to be set to 100% of the time (also known as 4k RPM)
-    shooterSubsystem.pidShoot(true);
+    turretSubsystem.pidShoot(true);
+    shooterShutOffTimer.reset();
+    shooterShutOffTimer.stop();
   }
 
   @Override
   public void execute() {
     // When shooter is at speed, shoot the balls, otherwise dont.
-    if(shooterSubsystem.isShooterAtSpeed()){
-      ballSubsystem.runAdvance(1);
+    if(turretSubsystem.isShooterAtSpeed()){
+      ballSubsystem.runAdvance(K_BALL.KeBAL_r_NormPwrAdvShoot);
+      ballSubsystem.runIntake(K_BALL.KeBAL_r_NormPwrIntakeShoot);
+      shooterShutOffTimer.start();
     }
     else{
       ballSubsystem.runAdvance(0);
+      ballSubsystem.runIntake(0);
     }
-    SmartDashboard.putNumber("Shooter Speed", shooterSubsystem.getSpeed());
+
+    if ((auxStick.getXButton() == true) || ballSubsystem.getBallSensorIntake() || ballSubsystem.getBallSensorOutput()) {
+      shooterShutOffTimer.reset();
+    }
+
+    SmartDashboard.putNumber("Shooter Speed", turretSubsystem.getSpeed());
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return auxStick.getYButtonReleased();
+    boolean condMet = (auxStick.getXButtonReleased() || (shooterShutOffTimer.get() >= 2.5));
+    return(condMet);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     ballSubsystem.runAdvance(0);
-    shooterSubsystem.pidShoot(false);
+    ballSubsystem.runIntake(0);
+    turretSubsystem.pidShoot(false);
   }
 }
